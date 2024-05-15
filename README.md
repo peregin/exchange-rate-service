@@ -1,4 +1,15 @@
-# Install Rust
+# Exchange Rate Service
+Connects to https://www.frankfurter.app/ on demand and retrieves the latest conversion rates.
+It uses a one-hour cache.
+
+Supports the following `json` endpoints:
+- /rates/currencies - to retrieve supported currencies
+- /rates/:base - to retrieve all FX rates for a given base currency
+- /rates/:base/:counter - to retrieve a specific rate for a given currency pair
+
+The root path `/` retrieves a welcome page in `text/html`.
+
+# Rust
 
 https://www.rust-lang.org/learn/get-started
 
@@ -13,7 +24,7 @@ rustup component add rust-analyzer
 rustup run stable rust-analyzer --version
 ```
 
-# Learn Rust
+## Learn Rust
 - https://www.rust-lang.org/
 - https://github.com/google/comprehensive-rust
 - https://opensource.googleblog.com/2023/06/rust-fact-vs-fiction-5-insights-from-googles-rust-journey-2022.html
@@ -22,17 +33,6 @@ rustup run stable rust-analyzer --version
 - https://github.com/mre/idiomatic-rust
 - https://github.com/rust-unofficial/awesome-rust
 - https://github.com/ctjhoa/rust-learning
-
-# Exchange Rate Service
-Connects to https://www.frankfurter.app/ on demand and retrieves the latest conversion rates.
-It uses a one-hour cache. 
-
-Supports the following `json` endpoints:
-- /rates/currencies - to retrieve supported currencies 
-- /rates/:base - to retrieve all FX rates for a given base currency 
-- /rates/:base/:counter - to retrieve a specific rate for a given currency pair
-
-The root path `/` retrieves a welcome page in `text/html`.
 
 ## Cargo
 Useful commands
@@ -47,7 +47,7 @@ cargo fix
 cargo build --release
 ```
 
-## Docker
+# Docker
 ```shell
 docker build -t peregin/velocorner.rates .
 docker run --rm -it -p 9012:9012 peregin/velocorner.rates
