@@ -1,0 +1,44 @@
+version: 2.1
+
+defaults:
+  working_directory: ~/project
+
+executors:
+  ci-deploy-executor:
+    docker:
+      - image: peregin/circleci:latest
+        user: circleci
+    environment:
+      JVM_OPTS: -Xmx3072m
+
+jobs:
+  deploy_rates-backend:
+    executor: ci-deploy-executor
+    steps:
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: dockerhub login
+          command: docker login -u peregin -p $DOCKERHUB_PASSWORD docker.io
+      - run:
+          name: deploy exchange-rate service
+          command: cd exchange-rate-service && ./deploy.sh
+
+  restart_stack:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$DEPLOYER_USER"@velocorner.com '/opt/velocorner/deploy.sh'
+
+workflows:
+  ci_cd:
+    jobs:
+      - deploy_rates-backend:
+          filters:
+            branches:
+              only: /master.*/
+#      - restart_stack:
+#          requires:
+#            - deploy_rates-backend
