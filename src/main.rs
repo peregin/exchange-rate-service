@@ -1,21 +1,15 @@
+mod model;
+
+use crate::model::ExchangeRate;
 use actix_web::get;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use awc::Client;
 use cached::proc_macro::cached;
 use chrono::{DateTime, Utc};
 use log::info;
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, default::Default, env};
 
 const HOST: &str = "https://api.frankfurter.app";
-
-
-// structure for the exchangerate.host/frankfurter.app (same for both) response and exposed on rates endpoint as well
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct ExchangeRate {
-    base: String,
-    rates: HashMap<String, f32>,
-}
 
 #[cached(time = 3600)]
 async fn rates_of(base: String) -> ExchangeRate {
@@ -58,8 +52,8 @@ async fn welcome(_: HttpRequest) -> impl Responder {
         env::consts::OS,
         env::consts::ARCH
     )
-        .customize()
-        .insert_header(("content-type", "text/html; charset=utf-8"))
+    .customize()
+    .insert_header(("content-type", "text/html; charset=utf-8"))
 }
 
 #[get("/rates/currencies")]
@@ -99,7 +93,7 @@ async fn main() -> std::io::Result<()> {
             .service(rate)
             .service(rates)
     })
-        .bind(format!("0.0.0.0:{port}"))?
-        .run()
-        .await
+    .bind(format!("0.0.0.0:{port}"))?
+    .run()
+    .await
 }
