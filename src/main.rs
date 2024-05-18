@@ -9,8 +9,6 @@ use chrono::{DateTime, Utc};
 use log::info;
 use std::env;
 
-
-
 // root path, simple welcome message
 async fn welcome(_: HttpRequest) -> impl Responder {
     let now: DateTime<Utc> = Utc::now();
