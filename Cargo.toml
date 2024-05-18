@@ -9,10 +9,10 @@ keywords = ["exchange", "rates", "fx", "crypto"]
 
 [dependencies]
 actix-web = "4"
-awc = { version = "3.0.0", features = [ "openssl" ] } # for the client access
-serde = { version = "1.0.149", features = ["derive"] }
-chrono = "0.4.23"
-time = "0.3.17"
-log = "0.4.0"
-env_logger = "0.10.0"
+awc = { version = "3.4.0", features = [ "openssl" ] } # for the client access
+serde = { version = "1.0.202", features = ["derive"] }
+chrono = "0.4.38"
+time = "0.3.36"
+log = "0.4.21"
+env_logger = "0.11.3"
 cached = "0.44.0" # caching results of functions
