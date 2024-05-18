@@ -1,3 +1,3 @@
-pub mod rate;
+pub mod model;
 
-pub use rate::*;
+pub use model::*;
