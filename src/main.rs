@@ -38,12 +38,10 @@ async fn rates(info: web::Path<String>) -> impl Responder {
 }
 
 #[get("/rates/{base}/{counter}")]
-async fn rate(info: web::Path<(String, String)>) -> HttpResponse {
-    let info = info.into_inner();
-    let base = info.0.to_uppercase();
-    let counter = info.1.to_uppercase();
-    let exchanges = rates_of(String::from(base)).await;
-    match exchanges.rates.get(&counter) {
+async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
+    let (base, counter) = params.into_inner();
+    let exchanges = rates_of(base.to_uppercase()).await;
+    match exchanges.rates.get(&counter.to_uppercase()) {
         Some(fx) => HttpResponse::Ok().json(fx),
         None => HttpResponse::NotFound().finish(),
     }
