@@ -1,5 +1,8 @@
+use crate::model::ExchangeRate;
 use crate::service::{rates_of, symbols};
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 use chrono::{DateTime, Utc};
 use std::env;
 
@@ -9,7 +12,8 @@ async fn welcome(_: HttpRequest) -> impl Responder {
     format!(
         r#"
     Welcome to <b>exchange rate service</b>, <i>{}</i><br/>
-    OS type is <i>{} {}</i>
+    OS type is <i>{} {}</i><br/>
+    API Docs at <a href="/docs/">/docs</a><br/>
     "#,
         now,
         env::consts::OS,
@@ -19,6 +23,11 @@ async fn welcome(_: HttpRequest) -> impl Responder {
     .insert_header(("content-type", "text/html; charset=utf-8"))
 }
 
+#[utoipa::path(
+    responses(
+        (status = 200, description = "List supported currencies", body = [String])
+    )
+)]
 #[get("/rates/currencies")]
 async fn currencies() -> impl Responder {
     web::Json(symbols().await.keys().cloned().collect::<Vec<_>>())
@@ -40,9 +49,31 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
         None => HttpResponse::NotFound().finish(),
     }
 }
+
+#[derive(OpenApi)]
+#[openapi(
+    info(
+        title = "Exchange Rates API",
+        description = "Rates API description"
+    ),
+    paths(
+        currencies,
+    ),
+    components(schemas(
+        ExchangeRate
+    )),
+    tags(
+        (name = "rates", description = "Exchange rates")
+    ),
+)]
+struct ApiDoc;
+
 pub fn init_routes(config: &mut web::ServiceConfig) {
     config.route("/", web::get().to(welcome));
     config.service(currencies);
     config.service(rates);
     config.service(rate);
+    config.service(
+        SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()),
+    );
 }

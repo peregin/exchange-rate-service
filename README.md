@@ -20,6 +20,7 @@ cargo clean
 cargo tree
 cargo fix
 cargo build --release
+cargo install --color=always --force cargo-expand
 ```
 
 # Docker
