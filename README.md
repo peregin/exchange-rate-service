@@ -9,8 +9,27 @@ Supports the following `json` endpoints:
 
 The root path `/` retrieves a welcome page in `text/html`.
 
-# Rust
+# Cargo
+Useful commands for build and package manager.
 
+```shell
+# check for updates
+cargo update --dry-run
+# clean build
+cargo clean
+cargo tree
+cargo fix
+cargo build --release
+```
+
+# Docker
+```shell
+docker build -t peregin/velocorner.rates .
+docker run --rm -it -p 9012:9012 peregin/velocorner.rates
+docker push peregin/velocorner.rates:latest
+```
+
+# Rust
 https://www.rust-lang.org/learn/get-started
 
 Install Rust from shell
@@ -34,23 +53,4 @@ rustup run stable rust-analyzer --version
 - https://github.com/rust-unofficial/awesome-rust
 - https://github.com/ctjhoa/rust-learning
 
-## Cargo
-Useful commands
-
-```shell
-# check for updates
-cargo update --dry-run
-# clean build
-cargo clean
-cargo tree
-cargo fix
-cargo build --release
-```
-
-# Docker
-```shell
-docker build -t peregin/velocorner.rates .
-docker run --rm -it -p 9012:9012 peregin/velocorner.rates
-docker push peregin/velocorner.rates:latest
-```
 

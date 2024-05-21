@@ -9,7 +9,8 @@ keywords = ["exchange", "rates", "fx", "crypto"]
 
 [dependencies]
 actix-web = "4"
-awc = { version = "3.4.0", features = [ "openssl" ] } # for the client access
+utoipa = { version = "4", features = ["actix_extras"] }
+awc = { version = "3.5.0", features = [ "openssl" ] } # for the client access
 serde = { version = "1.0.202", features = ["derive"] }
 chrono = "0.4.38"
 time = "0.3.36"
