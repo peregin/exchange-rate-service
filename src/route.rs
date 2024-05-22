@@ -1,10 +1,10 @@
 use crate::model::ExchangeRate;
 use crate::service::{rates_of, symbols};
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 use chrono::{DateTime, Utc};
 use std::env;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 // root path, simple welcome message
 async fn welcome(_: HttpRequest) -> impl Responder {
@@ -73,7 +73,5 @@ pub fn init_routes(config: &mut web::ServiceConfig) {
     config.service(currencies);
     config.service(rates);
     config.service(rate);
-    config.service(
-        SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()),
-    );
+    config.service(SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()));
 }

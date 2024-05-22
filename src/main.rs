@@ -1,6 +1,6 @@
 mod model;
-mod service;
 mod route;
+mod service;
 
 use actix_web::{App, HttpServer};
 use log::info;
@@ -12,7 +12,7 @@ async fn main() -> std::io::Result<()> {
     info!("starting exchange service on port {port} ...");
 
     HttpServer::new(|| App::new().configure(route::init_routes))
-    .bind(format!("0.0.0.0:{port}"))?
-    .run()
-    .await
+        .bind(format!("0.0.0.0:{port}"))?
+        .run()
+        .await
 }

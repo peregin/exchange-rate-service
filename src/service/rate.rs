@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use awc::Client;
 use cached::proc_macro::cached;
 use log::info;
+use std::collections::HashMap;
 
 use crate::model::ExchangeRate;
 
