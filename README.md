@@ -21,6 +21,7 @@ cargo tree
 cargo fix
 cargo build --release
 cargo install --color=always --force cargo-expand
+cargo update actix-web --precise 4.5.1
 ```
 
 # Docker
