@@ -8,8 +8,7 @@ jobs:
     docker:
       - image: cimg/base:2021.04
     steps:
-      - attach_workspace:
-          at: .
+      - checkout
       - setup_remote_docker:
           docker_layer_caching: false
       - run:
@@ -17,7 +16,7 @@ jobs:
           command: docker login -u peregin -p $DOCKERHUB_PASSWORD docker.io
       - run:
           name: deploy exchange-rate service
-          command: cd exchange-rate-service && ./deploy.sh
+          command: ./deploy.sh
 
   restart_stack:
     docker:
