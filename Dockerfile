@@ -1,7 +1,7 @@
 ####################################################################################################
 ## Builder - do not upgrade - openssl3 not supported properly
 ####################################################################################################
-FROM rust:1.78 AS builder
+FROM rust:1.71.1 AS builder
 
 # Create appuser
 ENV USER=rates
