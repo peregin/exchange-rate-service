@@ -1,7 +1,7 @@
 ####################################################################################################
 ## Builder - do not upgrade - openssl3 not supported properly
 ####################################################################################################
-FROM rust:1.68 AS builder
+FROM rust:1.78 AS builder
 
 # Create appuser
 ENV USER=rates
@@ -49,9 +49,8 @@ USER rates:rates
 
 # enable logging with env_logger
 ENV RUST_LOG=info
-# display backtrace
+# display capturing stacktrace via backtrace
 ENV RUST_BACKTRACE=1
-ENV RUST_BACKTRACE=full
 
 EXPOSE 9012
 
