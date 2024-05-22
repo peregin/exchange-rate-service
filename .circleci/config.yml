@@ -22,7 +22,7 @@ jobs:
     docker:
       - image: cimg/base:2021.04
     steps:
-      - run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$DEPLOYER_USER"@velocorner.com '/opt/velocorner/deploy.sh'
+      - run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$DEPLOYER_USER"@velocorner.com '/opt/velocorner/service-update.sh rates'
 
 workflows:
   ci_cd:
@@ -31,6 +31,6 @@ workflows:
           filters:
             branches:
               only: /master.*/
-#      - restart_stack:
-#          requires:
-#            - deploy_rates-backend
+      - restart_stack:
+          requires:
+            - deploy_rates-backend
