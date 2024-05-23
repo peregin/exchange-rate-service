@@ -1,7 +1,10 @@
-####################################################################################################
-## Builder - do not upgrade - openssl3 not supported properly
-####################################################################################################
-FROM rust:1.71.1 AS builder
+# builder layer
+FROM alpine:3.20 AS builder
+
+ENV PATH=$PATH:/root/.cargo/bin
+RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld
+RUN rustup-init --profile default --default-toolchain stable -y -t "$(uname -m)-unknown-linux-musl"
+RUN rustup update
 
 # Create appuser
 ENV USER=rates
