@@ -8,7 +8,7 @@ homepage = "https://velocorner.com"
 keywords = ["exchange", "rates", "fx", "crypto"]
 
 [dependencies]
-actix-web = "4.5.1"# downgrade to support older rust with libssl
+actix-web = "4"# downgrade to support older rust with libssl
 utoipa = { version = "4.2.3", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "6.0.0", features = ["actix-web"]} # downgrade to support older rust with libssl
 serde = { version = "1.0.202", features = ["derive"]}
