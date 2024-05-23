@@ -5,19 +5,24 @@ use chrono::{DateTime, Utc};
 use std::env;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
+use build_time::build_time_local;
 
 // root path, simple welcome message
 async fn welcome(_: HttpRequest) -> impl Responder {
     let now: DateTime<Utc> = Utc::now();
+    // Returns the local build timestamp in the specified format.
+    let local_build_time = build_time_local!("%Y-%m-%dT%H:%M:%S%.f%:z");
     format!(
         r#"
-    Welcome to <b>Exchange Rate Service</b> 🚀🪙<br/>
+    <h1>Welcome to Exchange Rate Service 🚀🪙</h1>
     Current time is <i>{}</i><br/>
+    Build time is <i>{}</i><br/>
     OS type is <i>{} {}</i><br/>
     Open API <a href="/docs/">/docs</a><br/>
     "#,
         now,
         env::consts::OS,
+        local_build_time,
         env::consts::ARCH
     )
     .customize()
