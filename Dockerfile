@@ -32,7 +32,7 @@ FROM debian:buster-slim
 
 RUN apt-get update -y && \
     apt-get dist-upgrade -y && \
-    apt-get install -y libssl-dev openssl openssl-libs-static clang ca-certificates && \
+    apt-get install -y libssl-dev openssl clang ca-certificates && \
     update-ca-certificates
 
 # Import from builder.
