@@ -1,3 +1,5 @@
+[![CircleCI](https://img.shields.io/circleci/build/github/peregin/exchange-rate-service/master?token=10fafb0dd1fbf4349da8c133d0a0ec3e64d74cfe)](https://app.circleci.com/pipelines/github/peregin/exchange-rate-service)
+
 # Exchange Rate Service
 Connects to https://www.frankfurter.app/ on demand and retrieves the latest conversion rates.
 It uses a one-hour cache.
