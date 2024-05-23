@@ -13,15 +13,16 @@ The root path `/` retrieves a welcome page in `text/html`.
 Useful commands for build and package manager.
 
 ```shell
-# check for updates
+# check for updates and force specific version
 cargo update --dry-run
+cargo update actix-web --precise 4.5.1
 # clean build
 cargo clean
+# dependency tree
 cargo tree
 cargo fix
 cargo build --release
 cargo install --color=always --force cargo-expand
-cargo update actix-web --precise 4.5.1
 ```
 
 # Docker
