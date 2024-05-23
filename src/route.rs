@@ -11,9 +11,9 @@ async fn welcome(_: HttpRequest) -> impl Responder {
     let now: DateTime<Utc> = Utc::now();
     format!(
         r#"
-    Welcome to <b>exchange rate service</b>, <i>{}</i><br/>
+    Welcome to <b>Exchange Rate Service</b>, <i>{}</i><br/>
     OS type is <i>{} {}</i><br/>
-    API Docs at <a href="/docs/">/docs</a><br/>
+    Open API <a href="/docs/">/docs</a><br/>
     "#,
         now,
         env::consts::OS,
