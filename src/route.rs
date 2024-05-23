@@ -21,8 +21,8 @@ async fn welcome(_: HttpRequest) -> impl Responder {
     Open API <a href="/docs/">/docs</a><br/>
     "#,
         now,
-        env::consts::OS,
         local_build_time,
+        env::consts::OS,
         env::consts::ARCH
     )
     .customize()
