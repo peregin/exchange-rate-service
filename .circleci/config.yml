@@ -23,6 +23,9 @@ jobs:
       - image: cimg/base:2021.04
     resource_class: small
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:0JgoOo+PO4Mp19b3ZkJ7BfWmo8dzLFS+e6ryCmJ2u1s"
       - run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$DEPLOYER_USER"@velocorner.com '/opt/velocorner/service-update.sh rates'
 
 workflows:
