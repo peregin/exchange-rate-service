@@ -1,7 +1,7 @@
 [![CircleCI](https://img.shields.io/circleci/build/github/peregin/exchange-rate-service/master?token=10fafb0dd1fbf4349da8c133d0a0ec3e64d74cfe)](https://app.circleci.com/pipelines/github/peregin/exchange-rate-service)
 
 # Exchange Rate Service
-Connects to https://www.frankfurter.app/ on demand and retrieves the latest conversion rates.
+Connects to various data sources on demand and retrieves the latest conversion rates.
 It uses a one-hour cache.
 
 Supports the following `json` endpoints:
@@ -11,21 +11,22 @@ Supports the following `json` endpoints:
 
 The root path `/` retrieves a welcome page in `text/html`.
 
-# Cargo
-Useful commands for build and package manager.
+## Requirements
+- open source and free usage (non-commercial)
+- indicative prices, update frequency is less, but at least once per day
+- provide exchange rates from Africa, e.g. UGX
+- provide historical data - helps to plot a chart trends for the last 30 days or 3 months
 
-```shell
-# check for updates and force specific version
-cargo update --dry-run
-cargo update actix-web --precise 4.5.1
-# clean build
-cargo clean
-# dependency tree
-cargo tree
-cargo fix
-cargo build --release
-cargo install --color=always --force cargo-expand
-```
+# Data Sources
+Data sources and characteristics.
+https://www.frankfurter.app/ ✅
+exchangerate.host
+exchangerate-api.com
+currencyapi.com
+openexchangerates.org
+exchangerateapi.io
+
+
 
 # Docker
 ```shell
@@ -48,9 +49,26 @@ rustup component add rust-analyzer
 rustup run stable rust-analyzer --version
 ```
 
+## Cargo
+Useful commands for build and package manager.
+
+```shell
+# check for updates and force specific version
+cargo update --dry-run
+cargo update actix-web --precise 4.5.1
+# clean build
+cargo clean
+# dependency tree
+cargo tree
+cargo fix
+cargo build --release
+cargo install --color=always --force cargo-expand
+```
+
 ## Learn Rust
 - https://www.rust-lang.org/
-- https://github.com/google/comprehensive-rust
+- https://github.com/google/comprehensive-rust - great comprehensive course
+- https://rust-exercises.com/ - learn by doing, 100 exercises
 - https://opensource.googleblog.com/2023/06/rust-fact-vs-fiction-5-insights-from-googles-rust-journey-2022.html
 - https://app.pluralsight.com/library/courses/fundamentals-rust/table-of-contents
 - https://cheats.rs/
