@@ -1,4 +1,4 @@
-[![CircleCI](https://img.shields.io/circleci/build/github/peregin/exchange-rate-service/master?token=10fafb0dd1fbf4349da8c133d0a0ec3e64d74cfe)](https://app.circleci.com/pipelines/github/peregin/exchange-rate-service)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/peregin/exchange-rate-service/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/peregin/exchange-rate-service/tree/master)
 
 # Exchange Rate Service
 Connects to various data sources on demand and retrieves the latest conversion rates.
@@ -17,16 +17,17 @@ The root path `/` retrieves a welcome page in `text/html`.
 - provide exchange rates from Africa, e.g. UGX
 - provide historical data - helps to plot a chart trends for the last 30 days or 3 months
 
-# Data Sources
+## Data Sources
 Data sources and characteristics.
-https://www.frankfurter.app/ ✅
-exchangerate.host
-exchangerate-api.com
-currencyapi.com
-openexchangerates.org
-exchangerateapi.io
 
-
+| Site                          | African Ccy |
+|-------------------------------|-------------|
+| https://www.frankfurter.app/  | ⛔️          |
+| https://exchangerate.host     | ✅           |
+| https://exchangerate-api.com  |             |
+| https://currencyapi.com       |             |
+| https://openexchangerates.org |             |
+| https://exchangeratesapi.io   |             |
 
 # Docker
 ```shell
