@@ -20,11 +20,11 @@ The root path `/` retrieves a welcome page in `text/html`.
 ## Data Sources
 Data sources and characteristics.
 
-| Site                          | African Ccy |
-|-------------------------------|-------------|
-| https://www.frankfurter.app/  | ⛔️          |
-| https://exchangerate.host     | ✅           |
-| https://exchangerate-api.com  |             |
+| Site                          | African Ccy | Free | Historical | Quota    | Source   |
+|-------------------------------|-------------|------|------------|----------|----------|
+| https://www.frankfurter.app/  | ⛔️          | ✅   | ✅         | no      | ECB      |
+| https://exchangerate.host     | ✅          | ✅   | ✅         | 100/mo  | multiple | 
+| https://exchangerate-api.com  | ✅          | ✅   | paid       | 1500/mo | 30+      | 
 | https://currencyapi.com       |             |
 | https://openexchangerates.org |             |
 | https://exchangeratesapi.io   |             |
