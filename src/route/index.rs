@@ -1,4 +1,4 @@
-use actix_web::{get, HttpRequest, Responder};
+use actix_web::{get, HttpRequest, Responder, web};
 use build_time::build_time_local;
 use chrono::{DateTime, Utc};
 use std::env;
@@ -38,4 +38,9 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
     )
         .customize()
         .insert_header(("content-type", "text/html; charset=utf-8"))
+}
+
+pub fn init_routes(config: &mut web::ServiceConfig) {
+    config.service(welcome);
+    config.service(favicon);
 }
