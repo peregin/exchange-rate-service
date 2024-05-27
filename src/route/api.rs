@@ -11,7 +11,9 @@ use crate::model::ExchangeRate;
 )]
 #[get("/rates/currencies")]
 async fn currencies() -> impl Responder {
-    web::Json(symbols().await.keys().cloned().collect::<Vec<_>>())
+    let mut syms = symbols().await.keys().cloned().collect::<Vec<_>>();
+    syms.sort();
+    web::Json(syms)
 }
 
 #[get("/rates/{base}")]
