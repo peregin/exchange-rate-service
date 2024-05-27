@@ -1,11 +1,16 @@
 use crate::model::ExchangeRate;
 use crate::service::{rates_of, symbols};
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+use build_time::build_time_local;
 use chrono::{DateTime, Utc};
 use std::env;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use build_time::build_time_local;
+
+#[get("/favicon.ico")]
+async fn favicon() -> actix_web::Result<actix_files::NamedFile> {
+    Ok(actix_files::NamedFile::open("static/favicon.ico")?)
+}
 
 // root path, simple welcome message
 async fn welcome(_: HttpRequest) -> impl Responder {
@@ -14,11 +19,21 @@ async fn welcome(_: HttpRequest) -> impl Responder {
     let local_build_time = build_time_local!("%Y-%m-%dT%H:%M:%S%.f%:z");
     format!(
         r#"
-    <h1>Welcome to Exchange Rate Service 🚀🪙</h1>
-    Current time is <i>{}</i><br/>
-    Build time is <i>{}</i><br/>
-    OS type is <i>{} {}</i><br/>
-    Open API <a href="/docs/">/docs</a><br/>
+        <head>
+            <title>Exchange Rates</title>
+            <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+            <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+            <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+            <link rel="icon" href="/favicon.ico">
+            <link rel="manifest" href="/site.webmanifest">
+        </head>
+        <body>
+            <h1>Welcome to Exchange Rate Service 🚀🪙</h1>
+            Current time is <i>{}</i><br/>
+            Build time is <i>{}</i><br/>
+            OS type is <i>{} {}</i><br/>
+            Open API <a href="/docs/">/docs</a><br/>
+        </body>
     "#,
         now,
         local_build_time,
@@ -80,4 +95,6 @@ pub fn init_routes(config: &mut web::ServiceConfig) {
     config.service(rates);
     config.service(rate);
     config.service(SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()));
+    config.service(actix_files::Files::new("/static", "static").show_files_listing());
+    config.service(favicon);
 }
