@@ -1,3 +1,1 @@
-pub mod rate;
-
-pub use rate::*;
+pub mod client;

@@ -1,6 +1,6 @@
 mod model;
-mod route;
 mod service;
+mod route;
 
 use actix_web::{App, HttpServer};
 use log::info;
