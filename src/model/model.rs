@@ -8,5 +8,6 @@ use utoipa::ToSchema;
 pub struct ExchangeRate {
     #[schema(example = "CHF")]
     pub base: String,
+    #[schema(example = r#"{"USD": 1.0, "EUR": 0.9, "JPY": 110.5}"#)]
     pub rates: HashMap<String, f32>,
 }
