@@ -48,7 +48,7 @@ WORKDIR /rates
 
 # Copy our build
 COPY --from=builder /rates/target/release/exchange-rate-service ./
-COPY --from=builder /rates/static ./static
+COPY --from=builder /rates/static ./
 
 # Use an unprivileged user.
 USER rates:rates
