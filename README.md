@@ -20,14 +20,20 @@ The root path `/` retrieves a welcome page in `text/html`.
 ## Data Sources
 Data sources and characteristics.
 
-| Site                          | African Ccy | Free | Historical | Quota   | Source   |
-|-------------------------------|-------------|------|------------|---------|----------|
-| https://www.frankfurter.app/  | ⛔️          | ✅    | ✅          | no      | ECB      |
-| https://exchangerate.host     | ✅           | ✅    | ✅          | 100/mo  | multiple | 
-| https://exchangerate-api.com  | ✅           | ✅    | paid       | 1500/mo | 30+      | 
-| https://currencyapi.com       | ✅           | ✅    | ✅          | 300/mo  | multiple |
-| https://openexchangerates.org | ✅           | ✅    | ✅          | 1000/mo | multiple |
-| https://exchangeratesapi.io   | ✅           | ✅    | ✅          | 200/mo  | multiple |
+| Site                            | African Ccy | Free | Historical | Quota   | Source   |
+|---------------------------------|-------------|------|------------|---------|----------|
+| https://www.frankfurter.app/    | ⛔️          | ✅    | ✅          | no      | ECB      |
+| https://exchangerate.host       | ✅           | ✅    | ✅          | 100/mo  | multiple | 
+| https://exchangerate-api.com    | ✅           | ✅    | paid       | 1500/mo | 30+      | 
+| https://currencyapi.com         | ✅           | ✅    | ✅          | 300/mo  | multiple |
+| https://openexchangerates.org   | ✅           | ✅    | ✅          | 1000/mo | multiple |
+| https://exchangeratesapi.io     | ✅           | ✅    | ✅          | 200/mo  | multiple |
+| https://currency.getgeoapi.com/ | ✅ | ✅ | ✅ | 100 / day | multiple |
+| https://www.abstractapi.com/    |
+| https://twelvedata.com/         |
+| https://data.ecb.europa.eu/ |
+| https://www.centralbank.go.ke/ |
+
 
 # Docker
 ```shell
