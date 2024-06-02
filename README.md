@@ -20,20 +20,21 @@ The root path `/` retrieves a welcome page in `text/html`.
 ## Data Sources
 Data sources and characteristics.
 
-| Site                            | African Ccy | Free | Historical | Quota   | Source   |
-|---------------------------------|-------------|------|------------|---------|----------|
-| https://www.frankfurter.app/    | ⛔️          | ✅    | ✅          | no      | ECB      |
-| https://exchangerate.host       | ✅           | ✅    | ✅          | 100/mo  | multiple | 
-| https://exchangerate-api.com    | ✅           | ✅    | paid       | 1500/mo | 30+      | 
-| https://currencyapi.com         | ✅           | ✅    | ✅          | 300/mo  | multiple |
-| https://openexchangerates.org   | ✅           | ✅    | ✅          | 1000/mo | multiple |
-| https://exchangeratesapi.io     | ✅           | ✅    | ✅          | 200/mo  | multiple |
-| https://currency.getgeoapi.com/ | ✅ | ✅ | ✅ | 100 / day | multiple |
-| https://www.abstractapi.com/    |
-| https://twelvedata.com/         |
-| https://data.ecb.europa.eu/ |
-| https://www.centralbank.go.ke/ |
-
+| Site                            | African Ccy | Free | Historical   | Quota      | Source   |
+|---------------------------------|-------------|------|--------------|------------|----------|
+| https://www.frankfurter.app/    | ⛔️          | ✅    | ✅            | no         | ECB      |
+| https://exchangerate.host       | ✅           | ✅    | ✅            | 100/mo     | multiple | 
+| https://exchangerate-api.com    | ✅           | ✅    | paid         | 1500/mo    | 30+      | 
+| https://currencyapi.com         | ✅           | ✅    | ✅            | 300/mo     | multiple |
+| https://openexchangerates.org   | ✅           | ✅    | ✅            | 1000/mo    | multiple |
+| https://exchangeratesapi.io     | ✅           | ✅    | ✅            | 200/mo     | multiple |
+| https://currency.getgeoapi.com/ | ✅           | ✅    | ✅            | 100 / day  | multiple |
+| https://rapidapi.com            | ✅           | ✅    | ⛔️           | 1000 / day | multiple |
+| https://p.rapidapi.com          | ✅           | ✅    | ✅ timeseries | 1000 / mo  | multiple |
+| https://www.abstractapi.com/    | ⛔️          | ⛔️   | ✅            | ⛔️ 500     | multiple |
+| https://twelvedata.com/         | ✅           | ✅    | ✅ timeseries | 800 / day  | multiple |
+| https://data.ecb.europa.eu/     | ⛔️          |      |              |            | ECB      |
+| https://www.centralbank.go.ke/  | ✅           |      |              |            | CBK      |
 
 # Docker
 ```shell
