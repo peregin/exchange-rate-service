@@ -5,6 +5,8 @@ use crate::service::client::{rates_of, symbols};
 use crate::model::ExchangeRate;
 
 #[utoipa::path(
+    get,
+    tag = "rates",
     responses(
         (status = 200, description = "List supported currencies", body = [String])
     )
