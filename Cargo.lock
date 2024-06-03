@@ -2139,9 +2139,9 @@ dependencies = [
 
 [[package]]
 name = "utoipa-swagger-ui"
-version = "7.1.0"
+version = "7.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "943e0ff606c6d57d410fd5663a4d7c074ab2c5f14ab903b9514565e59fa1189e"
+checksum = "ecc99cb909a0a82f94cbbbcad5fb220c3167b83e399c61b6e97fb6842ffbd317"
 dependencies = [
  "actix-web",
  "mime_guess",
