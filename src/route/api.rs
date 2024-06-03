@@ -9,21 +9,21 @@ use crate::model::ExchangeRate;
         (status = 200, description = "List supported currencies", body = [String])
     )
 )]
-#[get("/rates/currencies")]
+#[get("/api/rates/currencies")]
 async fn currencies() -> impl Responder {
     let mut syms = symbols().await.keys().cloned().collect::<Vec<_>>();
     syms.sort();
     web::Json(syms)
 }
 
-#[get("/rates/{base}")]
+#[get("/api/rates/{base}")]
 async fn rates(info: web::Path<String>) -> impl Responder {
     let base = info.into_inner().to_uppercase();
     let exchanges = rates_of(String::from(base)).await;
     web::Json(exchanges)
 }
 
-#[get("/rates/{base}/{counter}")]
+#[get("/api/rates/{base}/{counter}")]
 async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     let (base, counter) = params.into_inner();
     let exchanges = rates_of(base.to_uppercase()).await;
