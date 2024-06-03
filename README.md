@@ -17,6 +17,24 @@ The root path `/` retrieves a welcome page in `text/html`.
 - provide exchange rates from Africa, e.g. UGX
 - provide historical data - helps to plot a chart trends for the last 30 days or 3 months
 
+### Currencies to be supported
+Currencies supported in the Co-operaid online tool and velocorner.com product search. 
+
+| ISO 4217 Currency Code | Country Code | Country       |
+|------------------------|--------------|---------------|
+| BDT                    | BD           | Bangladesh    |
+| CHF                    | CH           | Switzerland   |
+| EUR                    | EU           | Eurozone      |
+| GBP                    | GB           | United Kingdom|
+| KES                    | KE           | Kenya         |
+| KHR                    | KH           | Cambodia      |
+| LAK                    | LA           | Laos          |
+| MZN                    | MZ           | Mozambique    |
+| MWK                    | MW           | Malawi        |
+| UGX                    | UG           | Uganda        |
+| USD                    | US           | United States |
+
+
 ## Data Sources
 Data sources and characteristics.
 
@@ -36,8 +54,8 @@ Data sources and characteristics.
 | https://data.ecb.europa.eu/     | ⛔️          | ✅    |              |            | ECB      |
 | https://www.centralbank.go.ke/  | ✅           | ✅    | ✅            | ?          | CBK      |
 
-
-### Get KES historical rates
+### KES
+Get KES historical rates
 ```shell
 curl 'https://www.centralbank.go.ke/wp-admin/admin-ajax.php?action=get_wdtable&table_id=193' \
   -H 'accept: application/json, text/javascript, */*; q=0.01' \
