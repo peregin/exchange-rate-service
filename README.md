@@ -53,6 +53,7 @@ Data sources and characteristics.
 | https://twelvedata.com/         | ✅        | ✅    | ✅ timeseries | 800 / day  | multiple |
 | https://data.ecb.europa.eu/     | ⛔️       | ✅    |              |            | ECB      |
 | https://www.centralbank.go.ke/  | ✅        | ✅    | ✅            | ?          | CBK      |
+| https://currencybeacon.com/     | ✅        | ✅    | ✅ timeseries | 5000 / mo  | multiple |
 
 ### KES
 Get KES historical rates from Central Bank Kenya
