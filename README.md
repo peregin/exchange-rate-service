@@ -54,6 +54,7 @@ Data sources and characteristics.
 | https://data.ecb.europa.eu/     | ⛔️       | ✅    |              |            | ECB      |
 | https://www.centralbank.go.ke/  | ✅        | ✅    | ✅            | ?          | CBK      |
 | https://currencybeacon.com/     | ✅        | ✅    | ✅ timeseries | 5000 / mo  | multiple |
+| fawazahmed0/exchange-api        | ✅        | ✅    | ✅            | no         | unknown  |
 
 ### KES
 Get KES historical rates from Central Bank Kenya
