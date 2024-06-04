@@ -38,23 +38,24 @@ Currencies supported in the Co-operaid online tool and velocorner.com product se
 ## Data Sources
 Data sources and characteristics.
 
-| Site                            | KES, BDT | Free | Historical   | Quota      | Source   |
-|---------------------------------|----------|------|--------------|------------|----------|
-| https://www.frankfurter.app/    | ⛔️       | ✅    | ✅ timeseries | no         | ECB      |
-| https://exchangerate.host       | ✅        | ✅    | ✅            | 100/mo     | multiple | 
-| https://exchangerate-api.com    | ✅        | ✅    | ⛔️ paid      | 1500/mo    | 30+      | 
-| https://currencyapi.com         | ✅        | ✅    | ✅            | 300/mo     | multiple |
-| https://openexchangerates.org   | ✅        | ✅    | ✅ timeseries | 1000/mo    | multiple |
-| https://exchangeratesapi.io     | ✅        | ✅    | ✅ timeseries | 250/mo     | multiple |
-| https://currency.getgeoapi.com/ | ✅        | ✅    | ✅            | 100 / day  | multiple |
-| https://rapidapi.com            | ✅        | ✅    | ⛔️           | 1000 / day | multiple |
-| https://p.rapidapi.com          | ✅        | ✅    | ✅ timeseries | 1000 / mo  | multiple |
-| https://www.abstractapi.com/    | ⛔️       | ⛔️   | ✅            | ⛔️ 500     | multiple |
-| https://twelvedata.com/         | ✅        | ✅    | ✅ timeseries | 800 / day  | multiple |
-| https://data.ecb.europa.eu/     | ⛔️       | ✅    |              |            | ECB      |
-| https://www.centralbank.go.ke/  | ✅        | ✅    | ✅            | ?          | CBK      |
-| https://currencybeacon.com/     | ✅        | ✅    | ✅ timeseries | 5000 / mo  | multiple |
-| fawazahmed0/exchange-api        | ✅        | ✅    | ✅            | no         | unknown  |
+| Site                            | KES, BDT | Free | Historical   | Quota      | Source      |
+|---------------------------------|----------|------|--------------|------------|-------------|
+| ☑️ https://www.frankfurter.app/ | ⛔️       | ✅    | ✅ timeseries | no         | ECB         |
+| https://exchangerate.host       | ✅        | ✅    | ✅            | 100/mo     | multiple    | 
+| https://exchangerate-api.com    | ✅        | ✅    | ⛔️ paid      | 1500/mo    | 30+         | 
+| https://currencyapi.com         | ✅        | ✅    | ✅            | 300/mo     | multiple    |
+| https://openexchangerates.org   | ✅        | ✅    | ✅ timeseries | 1000/mo    | multiple    |
+| https://exchangeratesapi.io     | ✅        | ✅    | ✅ timeseries | 250/mo     | multiple    |
+| https://currency.getgeoapi.com/ | ✅        | ✅    | ✅            | 100 / day  | multiple    |
+| https://rapidapi.com            | ✅        | ✅    | ⛔️           | 1000 / day | multiple    |
+| https://p.rapidapi.com          | ✅        | ✅    | ✅ timeseries | 1000 / mo  | multiple    |
+| https://www.abstractapi.com/    | ⛔️       | ⛔️   | ✅            | ⛔️ 500     | multiple    |
+| https://twelvedata.com/         | ✅        | ✅    | ✅ timeseries | 800 / day  | multiple    |
+| https://data.ecb.europa.eu/     | ⛔️       | ✅    |              |            | ECB         |
+| https://www.centralbank.go.ke/  | ✅        | ✅    | ✅            | ?          | CBK         |
+| https://currencybeacon.com/     | ✅        | ✅    | ✅ timeseries | 5000 / mo  | multiple    |
+| fawazahmed0/exchange-api        | ✅        | ✅    | ✅            | no         | unknown     |
+| ☑️ https://www.floatrates.com/  | ✅        | ✅    | ✅            | no         | CB multiple |
 
 ### KES
 Get KES historical rates from Central Bank Kenya
@@ -86,6 +87,12 @@ curl 'https://www.exchange-rates.org/api/v2/rates/lookup?isoTo=BDT&isoFrom=CHF&a
 -H 'sec-ch-ua-mobile: ?0' \
 -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' \
 -H 'sec-ch-ua-platform: "macOS"'
+```
+
+### Floating Rates
+```shell
+curl -s https://www.floatrates.com/daily/usd.json | jq .
+curl "https://www.floatrates.com/historical-exchange-rates.html?operation=rates&page=historical&currency_date=2024-03-11&base_currency_code=CHF&format_type=xml"
 ```
 
 # Docker
