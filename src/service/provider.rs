@@ -5,6 +5,21 @@ use std::collections::HashMap;
 
 use crate::model::ExchangeRate;
 
+// pub trait RateProvider {
+//     async fn rates_of(&self, base: String) -> ExchangeRate;
+//
+//     async fn symbols(&self) -> HashMap<String, String>;
+// }
+//
+// struct FloatRateProvider;
+//
+// impl FloatRateProvider {
+//     fn new() -> Self {
+//         FloatRateProvider
+//     }
+// }
+
+// European Central Bank (ECB) rate provider via Frankfurter API
 const HOST: &str = "https://api.frankfurter.app";
 
 #[cached(time = 3600)]
@@ -35,3 +50,5 @@ pub async fn symbols() -> HashMap<String, String> {
         .unwrap();
     reply.json::<HashMap<String, String>>().await.unwrap()
 }
+
+

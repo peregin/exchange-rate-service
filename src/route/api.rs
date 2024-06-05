@@ -1,14 +1,14 @@
 use actix_web::{get, HttpResponse, Responder, web};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::service::client::{rates_of, symbols};
+use crate::service::provider::{symbols, rates_of};
 use crate::model::ExchangeRate;
 
 #[utoipa::path(
     get,
     tag = "rates",
     responses(
-        (status = 200, description = "List supported currencies", body = [String])
+        (status = 200, description = "List supported currencies", body = [String], example = json!(["CHF", "USD", "EUR", "KES"]))
     )
 )]
 #[get("/api/rates/currencies")]
@@ -29,7 +29,7 @@ async fn currencies() -> impl Responder {
             status = 200,
             description = "List actual exchange rates with the given base currency",
             body = [ExchangeRate],
-            example = json!({"base": "CHF", "rates": {"USD": 1.0, "EUR": 1.0305, "JPY": 110.5}})
+            example = json!({"base": "CHF", "rates": {"USD": 1.1204, "EUR": 1.0305, "JPY": 174.9}})
         )
     )
 )]
