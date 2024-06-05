@@ -18,6 +18,21 @@ async fn currencies() -> impl Responder {
     web::Json(syms)
 }
 
+#[utoipa::path(
+    get,
+    tag = "rates",
+    params(
+        ("base" = String, Path, example = "CHF"),
+    ),
+    responses(
+        (
+            status = 200,
+            description = "List actual exchange rates with the given base currency",
+            body = [ExchangeRate],
+            example = json!({"base": "CHF", "rates": {"USD": 1.0, "EUR": 1.0305, "JPY": 110.5}})
+        )
+    )
+)]
 #[get("/api/rates/{base}")]
 async fn rates(info: web::Path<String>) -> impl Responder {
     let base = info.into_inner().to_uppercase();
@@ -25,6 +40,22 @@ async fn rates(info: web::Path<String>) -> impl Responder {
     web::Json(exchanges)
 }
 
+#[utoipa::path(
+    get,
+    tag = "rates",
+    params(
+        ("base" = String, Path, example = "CHF"),
+        ("counter" = String, Path, example = "EUR"),
+    ),
+    responses(
+        (
+            status = 200,
+            description = "List actual exchange rate for the given base and counter currencies",
+            body = [f32],
+            example = json!(1.0305)
+        )
+    )
+)]
 #[get("/api/rates/{base}/{counter}")]
 async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     let (base, counter) = params.into_inner();
@@ -43,6 +74,8 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     ),
     paths(
         currencies,
+        rates,
+        rate,
     ),
     components(schemas(
         ExchangeRate
