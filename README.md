@@ -51,7 +51,7 @@ Data sources and characteristics.
 | https://p.rapidapi.com          | ✅        | ✅    | ✅ timeseries | 1000 / mo  | multiple    |
 | https://www.abstractapi.com/    | ⛔️       | ⛔️   | ✅            | ⛔️ 500     | multiple    |
 | https://twelvedata.com/         | ✅        | ✅    | ✅ timeseries | 800 / day  | multiple    |
-| https://data.ecb.europa.eu/     | ⛔️       | ✅    |              |            | ECB         |
+| https://data.ecb.europa.eu/     | ⛔️       | ✅    | ⛔️           | ?          | ECB         |
 | https://www.centralbank.go.ke/  | ✅        | ✅    | ✅            | ?          | CBK         |
 | https://currencybeacon.com/     | ✅        | ✅    | ✅ timeseries | 5000 / mo  | multiple    |
 | fawazahmed0/exchange-api        | ✅        | ✅    | ✅            | no         | unknown     |
