@@ -13,6 +13,7 @@ use crate::route::model::ExchangeRate;
 )]
 #[get("/api/rates/currencies")]
 async fn currencies() -> impl Responder {
+    // data: web::Data<ECBRateProvider>
     let mut syms = symbols().await.keys().cloned().collect::<Vec<_>>();
     syms.sort();
     web::Json(syms)
