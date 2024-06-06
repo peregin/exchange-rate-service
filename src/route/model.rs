@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use utoipa::ToSchema;
 
-// 1./ structure for the exchangerate.host/frankfurter.app (same for both) response,
-// 2./ exposed on rates endpoint as well
+// models exposed to the public via api, be careful when changing it (and adapt upstreams)
+
+// structure used for the frankfurter.app and exchangerate.host (same for both) response
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct ExchangeRate {
     #[schema(example = "CHF")]

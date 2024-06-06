@@ -3,7 +3,7 @@ use cached::proc_macro::cached;
 use log::info;
 use std::collections::HashMap;
 
-use crate::model::ExchangeRate;
+use crate::route::model::ExchangeRate;
 
 // pub trait RateProvider {
 //     async fn rates_of(&self, base: String) -> ExchangeRate;

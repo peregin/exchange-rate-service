@@ -2,7 +2,7 @@ use actix_web::{get, HttpResponse, Responder, web};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 use crate::service::provider::{symbols, rates_of};
-use crate::model::ExchangeRate;
+use crate::route::model::ExchangeRate;
 
 #[utoipa::path(
     get,
