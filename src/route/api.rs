@@ -1,7 +1,7 @@
 use actix_web::{get, HttpResponse, Responder, web};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::service::provider::{symbols, rates_of};
+use crate::service::provider::{symbols, rates_of, ECBRateProvider};
 use crate::route::model::ExchangeRate;
 
 #[utoipa::path(
@@ -87,6 +87,7 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
 struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
+    //config.app_data(ECBRateProvider::new());
     config.service(currencies);
     config.service(rates);
     config.service(rate);
