@@ -2,6 +2,7 @@ use actix_web::{get, HttpRequest, Responder, web};
 use build_time::build_time_local;
 use chrono::{DateTime, Utc};
 use std::env;
+use humansize::{DECIMAL, format_size};
 use sysinfo::System;
 
 #[get("/favicon.ico")]
@@ -23,7 +24,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
             <title>Exchange Rates</title>
             <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
             <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-            <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+            <link rel="icπon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
             <link rel="icon" href="/static/favicon.ico">
             <link rel="manifest" href="/static/site.webmanifest">
         </head>
@@ -32,7 +33,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
             Current time is <i>{}</i><br/>
             Build time is <i>{}</i><br/>
             OS type is <i>{} {}</i><br/>
-            Used/total memory <i>{}/{}</i><br/>
+            Used/total memory <i>{} / {}</i><br/>
             Open API <a href="/docs/">/docs</a><br/>
         </body>
     "#,
@@ -40,8 +41,8 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
         local_build_time,
         env::consts::OS,
         env::consts::ARCH,
-        sys.used_memory(),
-        sys.total_memory()
+        format_size(sys.used_memory(), DECIMAL),
+        format_size(sys.total_memory(), DECIMAL),
     )
         .customize()
         .insert_header(("content-type", "text/html; charset=utf-8"))
