@@ -15,8 +15,32 @@ pub trait RateProvider {
 struct FloatRateProvider;
 
 impl FloatRateProvider {
+
+    const HOST: &'static str = "https://www.floatrates.com";
+
     fn new() -> Self {
         FloatRateProvider
+    }
+}
+
+impl RateProvider for FloatRateProvider {
+
+    fn rates_of(&self, base: String) -> ExchangeRate {
+        let client = Client::new();
+        let mut reply = client
+            .get(format!("{}/daily/{}.json", FloatRateProvider::HOST, base.to_lowercase()))
+            .header("User-Agent", "actix-web")
+            .header("Content-Type", "application/json")
+            .send()
+            .unwrap();
+        let reply = reply.json::<ExchangeRate>().unwrap();
+        info!("base={:#?}, {:#?} rates", base, reply.rates.keys().len());
+        reply
+    }
+
+    fn symbols(&self) -> HashMap<String, String> {
+        //rates_of("USD".to_string()).rates
+        HashMap::new()
     }
 }
 
