@@ -1,4 +1,4 @@
-use awc::Client;
+use reqwest::blocking::Client;
 use cached::proc_macro::cached;
 use log::info;
 use std::collections::HashMap;
@@ -7,9 +7,9 @@ use crate::route::model::ExchangeRate;
 
 pub trait RateProvider {
 
-    async fn rates_of(&self, base: String) -> ExchangeRate;
+    fn rates_of(&self, base: String) -> ExchangeRate;
 
-    async fn symbols(&self) -> HashMap<String, String>;
+    fn symbols(&self) -> HashMap<String, String>;
 }
 
 struct FloatRateProvider;
@@ -34,42 +34,40 @@ impl ECBRateProvider {
 
 impl RateProvider for ECBRateProvider {
 
-    async fn rates_of(&self, base: String) -> ExchangeRate {
-        let client = Client::default();
+    fn rates_of(&self, base: String) -> ExchangeRate {
+        let client = Client::new();
         let mut reply = client
             .get(format!("{}/latest?from={}", ECBRateProvider::HOST, base))
-            .insert_header(("User-Agent", "actix-web"))
-            .insert_header(("Content-Type", "application/json"))
+            .header("User-Agent", "actix-web")
+            .header("Content-Type", "application/json")
             .send()
-            .await
             .unwrap();
-        let reply = reply.json::<ExchangeRate>().await.unwrap();
+        let reply = reply.json::<ExchangeRate>().unwrap();
         info!("base={:#?}, {:#?} rates", base, reply.rates.keys().len());
         reply
     }
 
-    async fn symbols(&self) -> HashMap<String, String> {
-        let client = Client::default();
+    fn symbols(&self) -> HashMap<String, String> {
+        let client = Client::new();
         let mut reply = client
             .get(format!("{}/currencies", ECBRateProvider::HOST))
-            .insert_header(("User-Agent", "actix-web"))
-            .insert_header(("Content-Type", "application/json"))
+            .header("User-Agent", "actix-web")
+            .header("Content-Type", "application/json")
             .send()
-            .await
             .unwrap();
-        reply.json::<HashMap<String, String>>().await.unwrap()
+        reply.json::<HashMap<String, String>>().unwrap()
     }
 }
 
 #[cached(time = 3600)]
-pub async fn rates_of(base: String) -> ExchangeRate {
-    ECBRateProvider::new().rates_of(base).await
+pub fn rates_of(base: String) -> ExchangeRate {
+    ECBRateProvider::new().rates_of(base)
 }
 
 // map of ISO3 code -> description
 #[cached(time = 3600)]
-pub async fn symbols() -> HashMap<String, String> {
-    ECBRateProvider::new().symbols().await
+pub fn symbols() -> HashMap<String, String> {
+    ECBRateProvider::new().symbols()
 }
 
 

@@ -1,4 +1,5 @@
 use actix_web::{get, HttpResponse, Responder, web};
+use actix_web::rt::task::spawn_blocking;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 use crate::service::provider::{symbols, rates_of, ECBRateProvider};
@@ -8,15 +9,17 @@ use crate::route::model::ExchangeRate;
     get,
     tag = "rates",
     responses(
-        (status = 200, description = "List supported currencies", body = [String], example = json!(["CHF", "USD", "EUR", "KES"]))
+        (status = 200, description = "List supported currencies", body = [String], example = json ! (["CHF", "USD", "EUR", "KES"]))
     )
 )]
 #[get("/api/rates/currencies")]
-async fn currencies(data: web::Data<ECBRateProvider>) -> impl Responder {
+async fn currencies() -> impl Responder {
     //let mut syms = data.get_ref().currencies().await.keys().cloned().collect::<Vec<_>>();
-    let mut syms = symbols().await.keys().cloned().collect::<Vec<_>>();
-    syms.sort();
-    web::Json(syms)
+    spawn_blocking(move || {
+        let mut syms = symbols().keys().cloned().collect::<Vec<_>>();
+        syms.sort();
+        web::Json(syms)
+    }).await.unwrap()
 }
 
 #[utoipa::path(
@@ -27,18 +30,20 @@ async fn currencies(data: web::Data<ECBRateProvider>) -> impl Responder {
     ),
     responses(
         (
-            status = 200,
-            description = "List actual exchange rates with the given base currency",
-            body = [ExchangeRate],
-            example = json!({"base": "CHF", "rates": {"USD": 1.1204, "EUR": 1.0305, "JPY": 174.9}})
+        status = 200,
+        description = "List actual exchange rates with the given base currency",
+        body = [ExchangeRate],
+        example = json ! ({"base": "CHF", "rates": {"USD": 1.1204, "EUR": 1.0305, "JPY": 174.9}})
         )
     )
 )]
 #[get("/api/rates/{base}")]
 async fn rates(info: web::Path<String>) -> impl Responder {
     let base = info.into_inner().to_uppercase();
-    let exchanges = rates_of(String::from(base)).await;
-    web::Json(exchanges)
+    spawn_blocking(move || {
+        let exchanges = rates_of(String::from(base));
+        web::Json(exchanges)
+    }).await.unwrap()
 }
 
 #[utoipa::path(
@@ -50,17 +55,17 @@ async fn rates(info: web::Path<String>) -> impl Responder {
     ),
     responses(
         (
-            status = 200,
-            description = "List actual exchange rate for the given base and counter currencies",
-            body = [f32],
-            example = json!(1.0305)
+        status = 200,
+        description = "List actual exchange rate for the given base and counter currencies",
+        body = [f32],
+        example = json ! (1.0305)
         )
     )
 )]
 #[get("/api/rates/{base}/{counter}")]
 async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     let (base, counter) = params.into_inner();
-    let exchanges = rates_of(base.to_uppercase()).await;
+    let exchanges = spawn_blocking(move || { rates_of(base.to_uppercase()) }).await.unwrap();
     match exchanges.rates.get(&counter.to_uppercase()) {
         Some(fx) => HttpResponse::Ok().json(fx),
         None => HttpResponse::NotFound().finish(),
@@ -88,8 +93,9 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
 struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
-    //config.app_data(web::Data::new(ECBRateProvider::new()));
-    //let provider: Box<dyn crate::service::provider::RateProvider> = Box::new(ECBRateProvider::new());
+    // config.app_data(web::Data::new(ECBRateProvider::new()));
+    // let provider: Box<dyn crate::service::provider::RateProvider> = Box::new(ECBRateProvider::new());
+    // config.app_data(web::Data::new(provider));
     config.service(currencies);
     config.service(rates);
     config.service(rate);
