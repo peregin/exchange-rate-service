@@ -2,6 +2,7 @@ use actix_web::{get, HttpRequest, Responder, web};
 use build_time::build_time_local;
 use chrono::{DateTime, Utc};
 use std::env;
+use sysinfo::System;
 
 #[get("/favicon.ico")]
 pub async fn favicon() -> actix_web::Result<actix_files::NamedFile> {
@@ -13,6 +14,9 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
     let now: DateTime<Utc> = Utc::now();
     // Returns the local build timestamp in the specified format.
     let local_build_time = build_time_local!("%Y-%m-%dT%H:%M:%S%.f%:z");
+    // memory info
+    let mut sys = System::new_all();
+    sys.refresh_all();
     format!(
         r#"
         <head>
@@ -28,13 +32,16 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
             Current time is <i>{}</i><br/>
             Build time is <i>{}</i><br/>
             OS type is <i>{} {}</i><br/>
+            Used/total memory <i>{}/{}</i><br/>
             Open API <a href="/docs/">/docs</a><br/>
         </body>
     "#,
         now,
         local_build_time,
         env::consts::OS,
-        env::consts::ARCH
+        env::consts::ARCH,
+        sys.used_memory(),
+        sys.total_memory()
     )
         .customize()
         .insert_header(("content-type", "text/html; charset=utf-8"))
