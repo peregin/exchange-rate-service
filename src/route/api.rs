@@ -89,6 +89,7 @@ struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
     //config.app_data(web::Data::new(ECBRateProvider::new()));
+    //let provider: Box<dyn crate::service::provider::RateProvider> = Box::new(ECBRateProvider::new());
     config.service(currencies);
     config.service(rates);
     config.service(rate);

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use crate::route::model::ExchangeRate;
 
-trait RateProvider {
+pub trait RateProvider {
 
     async fn rates_of(&self, base: String) -> ExchangeRate;
 
