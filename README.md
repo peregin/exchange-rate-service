@@ -98,6 +98,7 @@ curl "https://www.floatrates.com/historical-exchange-rates.html?operation=rates&
 ### European Central Bank Rates
 ```shell
 curl -s https://api.frankfurter.app/latest | jq .
+curl -s https://api.frankfurter.app/currencies | jq .
 ```
 
 # Docker

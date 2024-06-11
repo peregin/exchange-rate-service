@@ -9,15 +9,15 @@ use crate::route::model::ExchangeRate;
     get,
     tag = "rates",
     responses(
-        (status = 200, description = "List supported currencies", body = [String], example = json ! (["CHF", "USD", "EUR", "KES"]))
+        (status = 200, description = "List supported currencies", body = HashMap < String, String >, example = json ! ({"CHF": "Swiss Franc", "USD": "U.S. Dollar", "EUR": "Euro", "KES": "Kenyan shilling"}))
     )
 )]
 #[get("/api/rates/currencies")]
 async fn currencies() -> impl Responder {
     spawn_blocking(move || {
-        let mut syms = symbols().keys().cloned().collect::<Vec<_>>();
-        syms.sort();
-        web::Json(syms)
+        let pairs = symbols();
+        let sorted = pairs.iter().map(|(k, v)| (k.to_uppercase(), v.clone())).collect::<std::collections::BTreeMap<_, _>>();
+        web::Json(sorted)
     }).await.unwrap()
 }
 

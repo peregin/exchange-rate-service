@@ -96,13 +96,19 @@ impl RateProvider for ECBRateProvider {
 
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
-    ECBRateProvider::new().rates_of(base)
+    let ecb = ECBRateProvider::new().rates_of(base.clone());
+    let float = FloatRateProvider::new().rates_of(base);
+    // ECB rates override float rates
+    float.chain(ecb)
 }
 
 // map of ISO3 code -> description
 #[cached(time = 3600)]
 pub fn symbols() -> HashMap<String, String> {
-    ECBRateProvider::new().symbols()
+    let ecb = ECBRateProvider::new().symbols();
+    let float = FloatRateProvider::new().symbols();
+    // merge 2 hashmaps with the supported symbols together
+    ecb.into_iter().chain(float.into_iter()).collect()
 }
 
 
