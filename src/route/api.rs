@@ -2,7 +2,7 @@ use actix_web::{get, HttpResponse, Responder, web};
 use actix_web::rt::task::spawn_blocking;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::service::provider::{symbols, rates_of, ECBRateProvider, RateProvider};
+use crate::service::provider::{symbols, rates_of};
 use crate::route::model::ExchangeRate;
 
 #[utoipa::path(
@@ -14,10 +14,8 @@ use crate::route::model::ExchangeRate;
 )]
 #[get("/api/rates/currencies")]
 async fn currencies() -> impl Responder {
-    //let mut syms = data.get_ref().currencies().await.keys().cloned().collect::<Vec<_>>();
     spawn_blocking(move || {
         let mut syms = symbols().keys().cloned().collect::<Vec<_>>();
-        //let mut syms = data.symbols().keys().cloned().collect::<Vec<_>>();
         syms.sort();
         web::Json(syms)
     }).await.unwrap()
@@ -94,6 +92,7 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
 struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
+    // would it make sense to have the providers as application data?
     //let provider: Box<dyn crate::service::provider::RateProvider> = Box::new(ECBRateProvider::new());
     //config.app_data(web::Data::new(provider));
 

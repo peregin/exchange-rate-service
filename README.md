@@ -95,6 +95,11 @@ curl -s https://www.floatrates.com/daily/usd.json | jq .
 curl "https://www.floatrates.com/historical-exchange-rates.html?operation=rates&page=historical&currency_date=2024-03-11&base_currency_code=CHF&format_type=xml"
 ```
 
+### European Central Bank Rates
+```shell
+curl -s https://api.frankfurter.app/latest | jq .
+```
+
 # Docker
 ```shell
 docker build -t peregin/velocorner.rates .
