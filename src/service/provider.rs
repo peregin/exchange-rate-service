@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::route::model::ExchangeRate;
 
 pub trait RateProvider {
-    fn rates_of(&self, base: String) -> ExchangeRate;
+    fn rates_of(&self, base: &String) -> ExchangeRate;
 
     fn symbols(&self) -> HashMap<String, String>;
 }
@@ -44,11 +44,11 @@ impl FloatRateProvider {
 
 impl RateProvider for FloatRateProvider {
 
-    fn rates_of(&self, base: String) -> ExchangeRate {
-        let reply = self.retrieve(&base);
+    fn rates_of(&self, base: &String) -> ExchangeRate {
+        let reply = self.retrieve(base);
         ExchangeRate {
-            base,
-            rates: reply.into_iter().map(|e| (e.code.clone(), e.rate)).collect(),
+            base: base.to_owned(),
+            rates: reply.into_iter().map(|e| (e.code, e.rate)).collect(),
         }
     }
 
@@ -69,7 +69,7 @@ impl ECBRateProvider {
 }
 
 impl RateProvider for ECBRateProvider {
-    fn rates_of(&self, base: String) -> ExchangeRate {
+    fn rates_of(&self, base: &String) -> ExchangeRate {
         let client = Client::new();
         let reply = client
             .get(format!("{}/latest?from={}", ECBRateProvider::HOST, base))
@@ -96,8 +96,8 @@ impl RateProvider for ECBRateProvider {
 
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
-    let ecb = ECBRateProvider::new().rates_of(base.clone());
-    let float = FloatRateProvider::new().rates_of(base);
+    let ecb = ECBRateProvider::new().rates_of(&base);
+    let float = FloatRateProvider::new().rates_of(&base);
     // ECB rates override float rates
     float.chain(ecb)
 }

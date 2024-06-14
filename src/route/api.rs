@@ -38,9 +38,9 @@ async fn currencies() -> impl Responder {
 )]
 #[get("/api/rates/{base}")]
 async fn rates(info: web::Path<String>) -> impl Responder {
-    let base = info.into_inner().to_uppercase();
+    let base: String = info.into_inner().to_uppercase();
     spawn_blocking(move || {
-        let exchanges = rates_of(String::from(base));
+        let exchanges = rates_of(base);
         web::Json(exchanges)
     }).await.unwrap()
 }
