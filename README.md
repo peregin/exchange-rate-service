@@ -18,21 +18,21 @@ The root path `/` retrieves a welcome page in `text/html`.
 - provide historical data - helps to plot a chart trends for the last 30 days or 3 months
 
 ### Currencies to be supported
-Currencies supported in the Co-operaid online tool and velocorner.com product search. 
+Currencies supported in the CO-OPERAID online tool and velocorner.com product search. 
 
-| ISO 4217 Currency Code | Currency Name       | Country Code | Country       |
-|------------------------|---------------------|--------------|---------------|
-| BDT                    | Bangladeshi Taka    | BD           | Bangladesh    |
-| CHF                    | Swiss Franc         | CH           | Switzerland   |
-| EUR                    | Euro                | EU           | Eurozone      |
-| GBP                    | British Pound       | GB           | United Kingdom|
-| KES                    | Kenyan Shilling     | KE           | Kenya         |
-| KHR                    | Cambodian Riel      | KH           | Cambodia      |
-| LAK                    | Lao Kip             | LA           | Laos          |
-| MZN                    | Mozambican Metical  | MZ           | Mozambique    |
-| MWK                    | Malawian Kwacha     | MW           | Malawi        |
-| UGX                    | Ugandan Shilling    | UG           | Uganda        |
-| USD                    | United States Dollar| US           | United States |
+| ISO 4217 Currency Code | Currency Name        | Country Code | Country        |
+|------------------------|----------------------|--------------|----------------|
+| BDT                    | Bangladeshi Taka     | BD           | Bangladesh     |
+| CHF                    | Swiss Franc          | CH           | Switzerland    |
+| EUR                    | Euro                 | EU           | Eurozone       |
+| GBP                    | British Pound        | GB           | United Kingdom |
+| KES                    | Kenyan Shilling      | KE           | Kenya          |
+| KHR                    | Cambodian Riel       | KH           | Cambodia       |
+| LAK                    | Lao Kip              | LA           | Laos           |
+| MZN                    | Mozambican Metical   | MZ           | Mozambique     |
+| MWK                    | Malawian Kwacha      | MW           | Malawi         |
+| UGX                    | Ugandan Shilling     | UG           | Uganda         |
+| USD                    | United States Dollar | US           | United States  |
 
 
 ## Data Sources
