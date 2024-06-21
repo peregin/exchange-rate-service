@@ -15,13 +15,16 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         let allowed_origins = Regex::new(r".*(localhost|peregin\.com|velocorner\.com)").unwrap();
         let cors = Cors::default()
-            .allowed_origin("http://localhost:3000/")
-            .allowed_origin_fn(move |origin, _head| {
-                allowed_origins.is_match(origin.to_str().unwrap())
+            .allowed_origin_fn(move |origin_header, _request_head| {
+                let origin = origin_header.to_str().unwrap();
+                info!("origin: {origin}");
+                allowed_origins.is_match(origin)
             })
             .allowed_methods(vec!["GET"])
-            .allowed_header(actix_web::http::header::ACCEPT)
-            .allowed_header(actix_web::http::header::CONTENT_TYPE)
+            .allowed_headers(vec![
+                actix_web::http::header::ACCEPT,
+                actix_web::http::header::CONTENT_TYPE
+            ])
             .max_age(3600);
         App::new().wrap(cors).configure(route::route::init_routes)
     })
