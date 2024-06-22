@@ -17,11 +17,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         let origins_regex = Regex::new(ALLOWED_ORIGINS).unwrap();
         let cors = Cors::default()
-            .allowed_origin_fn(move |origin_header, _request_head| {
-                let origin = origin_header.to_str().unwrap();
-                info!("origin: {origin}");
-                is_allowed_origin(origin, &origins_regex)
-            })
+            .allow_any_origin()
             .allow_any_header()
             .allow_any_method()
             .expose_any_header()
