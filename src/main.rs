@@ -20,7 +20,7 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default()
             .allowed_origin_fn(move |origin_header, _request_head| {
                 let origin = origin_header.to_str().unwrap();
-                debug!("origin: {origin}");
+                info!("origin: {origin}");
                 is_allowed_origin(origin, &origins_regex)
             })
             .allowed_methods(vec!["GET"])
