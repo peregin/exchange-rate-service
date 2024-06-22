@@ -3,9 +3,8 @@ mod service;
 
 use actix_web::{App, HttpServer};
 use actix_cors::Cors;
-use log::{debug, info};
+use log::info;
 use regex::Regex;
-use actix_web::http::header;
 
 const ALLOWED_ORIGINS: &str = r".*(localhost|peregin\.com|velocorner\.com)";
 
@@ -26,6 +25,7 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header()
             .allow_any_method()
             .expose_any_header()
+            .block_on_origin_mismatch(false)
             .max_age(3600); // preflight cache TTL
         App::new().wrap(cors).configure(route::route::init_routes)
     })
@@ -50,6 +50,7 @@ mod tests {
         assert!(is_allowed_origin("https://www.peregin.com", &origins_regex));
         assert!(is_allowed_origin("https://rates.velocorner.com", &origins_regex));
         assert!(is_allowed_origin("http://localhost:8000", &origins_regex));
+        assert!(is_allowed_origin("http://localhost:3000", &origins_regex));
 
         // Test disallowed origins
         assert!(!is_allowed_origin("https://www.example.org", &origins_regex));
