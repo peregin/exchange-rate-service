@@ -3,7 +3,7 @@ mod service;
 
 use actix_web::{App, HttpServer};
 use actix_cors::Cors;
-use log::info;
+use log::{debug, info};
 use regex::Regex;
 
 const ALLOWED_ORIGINS: &str = r".*(localhost|peregin\.com|velocorner\.com)";
@@ -15,7 +15,13 @@ async fn main() -> std::io::Result<()> {
     info!("starting exchange service on port {port} ...");
 
     HttpServer::new(|| {
-        let cors = Cors::permissive();
+        let origins_regex = Regex::new(ALLOWED_ORIGINS).unwrap();
+        let cors = Cors::permissive()
+            .allowed_origin_fn(move |origin_header, _request_head| {
+                let origin = origin_header.to_str().unwrap();
+                debug!("origin: {origin}");
+                is_allowed_origin(origin, &origins_regex)
+            });
         App::new().wrap(cors).configure(route::route::init_routes)
     })
         .bind(format!("0.0.0.0:{port}"))?
