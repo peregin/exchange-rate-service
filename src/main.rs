@@ -15,14 +15,7 @@ async fn main() -> std::io::Result<()> {
     info!("starting exchange service on port {port} ...");
 
     HttpServer::new(|| {
-        let origins_regex = Regex::new(ALLOWED_ORIGINS).unwrap();
-        let cors = Cors::default()
-            .allow_any_origin()
-            .allow_any_header()
-            .allow_any_method()
-            .expose_any_header()
-            .block_on_origin_mismatch(false)
-            .max_age(3600); // preflight cache TTL
+        let cors = Cors::permissive();
         App::new().wrap(cors).configure(route::route::init_routes)
     })
         .bind(format!("0.0.0.0:{port}"))?
