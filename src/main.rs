@@ -24,11 +24,7 @@ async fn main() -> std::io::Result<()> {
                 is_allowed_origin(origin, &origins_regex)
             })
             .allowed_methods(vec!["GET"])
-            .allowed_headers(&[header::AUTHORIZATION, header::ACCEPT])
-            .allowed_headers(vec![
-                header::ACCEPT,
-                header::CONTENT_TYPE
-            ])
+            .allow_any_header()
             .block_on_origin_mismatch(false) // allow cURL/HTTPie from working without providing Origin headers
             .max_age(3600); // preflight cache TTL
         App::new().wrap(cors).configure(route::route::init_routes)
