@@ -3,6 +3,7 @@ use cached::proc_macro::cached;
 use log::info;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use time::Date;
 
 use crate::route::model::ExchangeRate;
 
@@ -10,6 +11,8 @@ pub trait RateProvider {
     fn rates_of(&self, base: &String) -> ExchangeRate;
 
     fn symbols(&self) -> HashMap<String, String>;
+
+    fn latest_rates_of(&self, base: &String, last_days: u16) -> HashMap<Date, ExchangeRate>;
 }
 
 struct FloatRateProvider;
@@ -55,6 +58,10 @@ impl RateProvider for FloatRateProvider {
     fn symbols(&self) -> HashMap<String, String> {
         self.retrieve(&String::from("CHF")).into_iter().map(|e| (e.code, e.name)).collect()
     }
+
+    fn latest_rates_of(&self, base: &String, last_days: u16) -> HashMap<Date, ExchangeRate> {
+        unimplemented!()
+    }
 }
 
 pub struct ECBRateProvider;
@@ -92,6 +99,10 @@ impl RateProvider for ECBRateProvider {
             .unwrap();
         reply.json::<HashMap<String, String>>().unwrap()
     }
+
+    fn latest_rates_of(&self, base: &String, last_days: u16) -> HashMap<Date, ExchangeRate> {
+        unimplemented!()
+    }
 }
 
 #[cached(time = 3600)]
@@ -109,6 +120,11 @@ pub fn symbols() -> HashMap<String, String> {
     let float = FloatRateProvider::new().symbols();
     // merge 2 hashmaps with the supported symbols together
     ecb.into_iter().chain(float.into_iter()).collect()
+}
+
+#[cached(time = 3600)]
+pub fn latest_rates_of(base: String, last_days: u16) -> HashMap<Date, ExchangeRate> {
+    ECBRateProvider::new().latest_rates_of(&base, last_days)
 }
 
 
