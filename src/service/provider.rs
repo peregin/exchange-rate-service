@@ -2,17 +2,19 @@ use reqwest::blocking::Client;
 use cached::proc_macro::cached;
 use log::info;
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use time::Date;
 
 use crate::route::model::ExchangeRate;
 
 pub trait RateProvider {
-    fn rates_of(&self, base: &String) -> ExchangeRate;
+    fn latest(&self, base: &String) -> ExchangeRate;
 
+    // iso3 -> description
     fn symbols(&self) -> HashMap<String, String>;
 
-    fn latest_rates_of(&self, base: &String, last_days: u16) -> HashMap<Date, ExchangeRate>;
+    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate>;
 }
 
 struct FloatRateProvider;
@@ -47,7 +49,7 @@ impl FloatRateProvider {
 
 impl RateProvider for FloatRateProvider {
 
-    fn rates_of(&self, base: &String) -> ExchangeRate {
+    fn latest(&self, base: &String) -> ExchangeRate {
         let reply = self.retrieve(base);
         ExchangeRate {
             base: base.to_owned(),
@@ -59,7 +61,7 @@ impl RateProvider for FloatRateProvider {
         self.retrieve(&String::from("CHF")).into_iter().map(|e| (e.code, e.name)).collect()
     }
 
-    fn latest_rates_of(&self, base: &String, last_days: u16) -> HashMap<Date, ExchangeRate> {
+    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
         unimplemented!()
     }
 }
@@ -76,7 +78,7 @@ impl ECBRateProvider {
 }
 
 impl RateProvider for ECBRateProvider {
-    fn rates_of(&self, base: &String) -> ExchangeRate {
+    fn latest(&self, base: &String) -> ExchangeRate {
         let client = Client::new();
         let reply = client
             .get(format!("{}/latest?from={}", ECBRateProvider::HOST, base))
@@ -100,15 +102,15 @@ impl RateProvider for ECBRateProvider {
         reply.json::<HashMap<String, String>>().unwrap()
     }
 
-    fn latest_rates_of(&self, base: &String, last_days: u16) -> HashMap<Date, ExchangeRate> {
+    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
         unimplemented!()
     }
 }
 
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
-    let ecb = ECBRateProvider::new().rates_of(&base);
-    let float = FloatRateProvider::new().rates_of(&base);
+    let ecb = ECBRateProvider::new().latest(&base);
+    let float = FloatRateProvider::new().latest(&base);
     // ECB rates override float rates
     float.chain(ecb)
 }
@@ -123,8 +125,8 @@ pub fn symbols() -> HashMap<String, String> {
 }
 
 #[cached(time = 3600)]
-pub fn latest_rates_of(base: String, last_days: u16) -> HashMap<Date, ExchangeRate> {
-    ECBRateProvider::new().latest_rates_of(&base, last_days)
+pub fn historical_rates_of(base: String, from: DateTime<Utc>, to: DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
+    ECBRateProvider::new().historical(&base, &from, &to)
 }
 
 

@@ -1,8 +1,9 @@
 use actix_web::{get, HttpResponse, Responder, web};
 use actix_web::rt::task::spawn_blocking;
+use chrono::{DateTime, Utc};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::service::provider::{symbols, rates_of, latest_rates_of};
+use crate::service::provider::{symbols, rates_of, historical_rates_of};
 use crate::route::model::ExchangeRate;
 
 #[utoipa::path(
@@ -86,11 +87,13 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
         )
     )
 )]
-#[get("/api/rates/latest/{base}")]
-async fn last_rate(params: web::Path<String>) -> HttpResponse {
+#[get("/api/rates/historical/{base}")]
+async fn historical_rates(params: web::Path<String>) -> HttpResponse {
     let base = params.into_inner().to_uppercase();
+    let now: DateTime<Utc> = Utc::now();
+    let last_month: DateTime<Utc> = now - chrono::Duration::days(30);
     let series = spawn_blocking(move || {
-        latest_rates_of(base.to_uppercase(), 1)
+        historical_rates_of(base.to_uppercase(), last_month, now)
     }).await.unwrap();
     HttpResponse::Ok().json(series)
 }
@@ -105,7 +108,7 @@ async fn last_rate(params: web::Path<String>) -> HttpResponse {
         currencies,
         rates,
         rate,
-        last_rate,
+        historical_rates,
     ),
     components(schemas(
         ExchangeRate
@@ -124,6 +127,6 @@ pub fn init_routes(config: &mut web::ServiceConfig) {
     config.service(currencies);
     config.service(rates);
     config.service(rate);
-    config.service(last_rate);
+    config.service(historical_rates);
     config.service(SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()));
 }
