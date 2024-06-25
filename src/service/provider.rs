@@ -21,6 +21,7 @@ pub trait RateProvider {
 // specific implementation backed up by float rate provider
 struct FloatRateProvider;
 
+// internal response
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct FloatRateEntry {
     pub code: String,
@@ -70,6 +71,13 @@ impl RateProvider for FloatRateProvider {
 // specific implementation backed up by ECB rates
 pub struct EcbRateProvider;
 
+// internal response
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct EcbRateHistory {
+    pub base: String,
+    pub rates: HashMap<String, HashMap<String, f32>>, // date -> rates
+}
+
 impl EcbRateProvider {
     // European Central Bank (ECB) rate provider via Frankfurter API
     const HOST: &'static str = "https://api.frankfurter.app";
@@ -106,8 +114,12 @@ impl RateProvider for EcbRateProvider {
         let iso_from = from.format("%Y-%m-%d").to_string();
         let iso_to = to.format("%Y-%m-%d").to_string();
         let reply = self.get(&format!("{}..{}?from={}", iso_from, iso_to, base));
-        //reply.json::
-        HashMap::new()
+        // reply.json::<EcbRateHistory>().unwrap().rates.into_iter().map(|(date, rates)| {
+        //     (DateTime::parse_from_str(&date, "%Y-%m-%d").unwrap(), ExchangeRate { base: base.to_owned(), rates })
+        // }).map(|(date, rates)| {
+        //     (date.date(), rates)
+        // }).collect()
+        unimplemented!()
     }
 }
 
