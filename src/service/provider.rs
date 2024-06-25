@@ -1,4 +1,4 @@
-use reqwest::blocking::Client;
+use reqwest::blocking::{Client, Response};
 use cached::proc_macro::cached;
 use log::info;
 use std::collections::HashMap;
@@ -8,6 +8,7 @@ use time::Date;
 
 use crate::route::model::ExchangeRate;
 
+// generic contract what needs to be implemented by any rate provider
 pub trait RateProvider {
     fn latest(&self, base: &String) -> ExchangeRate;
 
@@ -17,6 +18,7 @@ pub trait RateProvider {
     fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate>;
 }
 
+// specific implementation backed up by float rate provider
 struct FloatRateProvider;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -48,7 +50,6 @@ impl FloatRateProvider {
 }
 
 impl RateProvider for FloatRateProvider {
-
     fn latest(&self, base: &String) -> ExchangeRate {
         let reply = self.retrieve(base);
         ExchangeRate {
@@ -61,55 +62,58 @@ impl RateProvider for FloatRateProvider {
         self.retrieve(&String::from("CHF")).into_iter().map(|e| (e.code, e.name)).collect()
     }
 
-    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
+    fn historical(&self, _base: &String, _from: &DateTime<Utc>, _to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
         unimplemented!()
     }
 }
 
-pub struct ECBRateProvider;
+// specific implementation backed up by ECB rates
+pub struct EcbRateProvider;
 
-impl ECBRateProvider {
+impl EcbRateProvider {
     // European Central Bank (ECB) rate provider via Frankfurter API
     const HOST: &'static str = "https://api.frankfurter.app";
 
     pub fn new() -> Self {
-        ECBRateProvider
+        EcbRateProvider
     }
-}
 
-impl RateProvider for ECBRateProvider {
-    fn latest(&self, base: &String) -> ExchangeRate {
+    fn get(&self, path: &String) -> Response {
         let client = Client::new();
-        let reply = client
-            .get(format!("{}/latest?from={}", ECBRateProvider::HOST, base))
+        client
+            .get(format!("{}/{}", EcbRateProvider::HOST, path))
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")
             .send()
-            .unwrap();
+            .unwrap()
+    }
+}
+
+impl RateProvider for EcbRateProvider {
+    fn latest(&self, base: &String) -> ExchangeRate {
+        let reply = self.get(&format!("latest?from={}", base));
         let reply = reply.json::<ExchangeRate>().unwrap();
         info!("base={:#?}, {:#?} rates", base, reply.rates.keys().len());
         reply
     }
 
     fn symbols(&self) -> HashMap<String, String> {
-        let client = Client::new();
-        let reply = client
-            .get(format!("{}/currencies", ECBRateProvider::HOST))
-            .header("User-Agent", "actix-web")
-            .header("Content-Type", "application/json")
-            .send()
-            .unwrap();
+        let reply = self.get(&String::from("currencies"));
         reply.json::<HashMap<String, String>>().unwrap()
     }
 
     fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
-        unimplemented!()
+        let iso_from = from.format("%Y-%m-%d").to_string();
+        let iso_to = to.format("%Y-%m-%d").to_string();
+        let reply = self.get(&format!("{}..{}?from={}", iso_from, iso_to, base));
+        //reply.json::
+        HashMap::new()
     }
 }
 
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
-    let ecb = ECBRateProvider::new().latest(&base);
+    let ecb = EcbRateProvider::new().latest(&base);
     let float = FloatRateProvider::new().latest(&base);
     // ECB rates override float rates
     float.chain(ecb)
@@ -118,7 +122,7 @@ pub fn rates_of(base: String) -> ExchangeRate {
 // map of ISO3 code -> description
 #[cached(time = 3600)]
 pub fn symbols() -> HashMap<String, String> {
-    let ecb = ECBRateProvider::new().symbols();
+    let ecb = EcbRateProvider::new().symbols();
     let float = FloatRateProvider::new().symbols();
     // merge 2 hashmaps with the supported symbols together
     ecb.into_iter().chain(float.into_iter()).collect()
@@ -126,7 +130,7 @@ pub fn symbols() -> HashMap<String, String> {
 
 #[cached(time = 3600)]
 pub fn historical_rates_of(base: String, from: DateTime<Utc>, to: DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
-    ECBRateProvider::new().historical(&base, &from, &to)
+    EcbRateProvider::new().historical(&base, &from, &to)
 }
 
 
