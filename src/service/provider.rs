@@ -1,12 +1,11 @@
-use reqwest::blocking::{Client, Response};
 use cached::proc_macro::cached;
-use log::info;
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use time::Date;
 
 use crate::route::model::ExchangeRate;
+use crate::service::provider_ecb::EcbRateProvider;
+use crate::service::provider_float::FloatRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
 pub trait RateProvider {
@@ -16,111 +15,6 @@ pub trait RateProvider {
     fn symbols(&self) -> HashMap<String, String>;
 
     fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate>;
-}
-
-// specific implementation backed up by float rate provider
-struct FloatRateProvider;
-
-// internal response
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct FloatRateEntry {
-    pub code: String,
-    pub name: String,
-    pub rate: f32,
-}
-
-impl FloatRateProvider {
-    const HOST: &'static str = "https://www.floatrates.com";
-
-    fn new() -> Self {
-        FloatRateProvider
-    }
-
-    fn retrieve(&self, base: &String) -> Vec<FloatRateEntry> {
-        let client = Client::new();
-        let reply = client
-            .get(format!("{}/daily/{}.json", FloatRateProvider::HOST, base.to_lowercase()))
-            .header("User-Agent", "actix-web")
-            .header("Content-Type", "application/json")
-            .send()
-            .unwrap();
-        let reply = reply.json::<HashMap<String, FloatRateEntry>>().unwrap();
-        info!("base={:#?}, {:#?} rates", base, reply.len());
-        reply.values().cloned().collect()
-    }
-}
-
-impl RateProvider for FloatRateProvider {
-    fn latest(&self, base: &String) -> ExchangeRate {
-        let reply = self.retrieve(base);
-        ExchangeRate {
-            base: base.to_owned(),
-            rates: reply.into_iter().map(|e| (e.code, e.rate)).collect(),
-        }
-    }
-
-    fn symbols(&self) -> HashMap<String, String> {
-        self.retrieve(&String::from("CHF")).into_iter().map(|e| (e.code, e.name)).collect()
-    }
-
-    fn historical(&self, _base: &String, _from: &DateTime<Utc>, _to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
-        unimplemented!()
-    }
-}
-
-// specific implementation backed up by ECB rates
-pub struct EcbRateProvider;
-
-// internal response
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct EcbRateHistory {
-    pub base: String,
-    pub rates: HashMap<String, HashMap<String, f32>>, // date -> rates
-}
-
-impl EcbRateProvider {
-    // European Central Bank (ECB) rate provider via Frankfurter API
-    const HOST: &'static str = "https://api.frankfurter.app";
-
-    pub fn new() -> Self {
-        EcbRateProvider
-    }
-
-    fn get(&self, path: &String) -> Response {
-        let client = Client::new();
-        client
-            .get(format!("{}/{}", EcbRateProvider::HOST, path))
-            .header("User-Agent", "actix-web")
-            .header("Content-Type", "application/json")
-            .send()
-            .unwrap()
-    }
-}
-
-impl RateProvider for EcbRateProvider {
-    fn latest(&self, base: &String) -> ExchangeRate {
-        let reply = self.get(&format!("latest?from={}", base));
-        let reply = reply.json::<ExchangeRate>().unwrap();
-        info!("base={:#?}, {:#?} rates", base, reply.rates.keys().len());
-        reply
-    }
-
-    fn symbols(&self) -> HashMap<String, String> {
-        let reply = self.get(&String::from("currencies"));
-        reply.json::<HashMap<String, String>>().unwrap()
-    }
-
-    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
-        let iso_from = from.format("%Y-%m-%d").to_string();
-        let iso_to = to.format("%Y-%m-%d").to_string();
-        let reply = self.get(&format!("{}..{}?from={}", iso_from, iso_to, base));
-        // reply.json::<EcbRateHistory>().unwrap().rates.into_iter().map(|(date, rates)| {
-        //     (DateTime::parse_from_str(&date, "%Y-%m-%d").unwrap(), ExchangeRate { base: base.to_owned(), rates })
-        // }).map(|(date, rates)| {
-        //     (date.date(), rates)
-        // }).collect()
-        unimplemented!()
-    }
 }
 
 #[cached(time = 3600)]
