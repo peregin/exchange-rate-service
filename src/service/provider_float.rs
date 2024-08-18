@@ -39,6 +39,13 @@ impl FloatRateProvider {
 }
 
 impl RateProvider for FloatRateProvider {
+
+    fn provider_name(&self) -> String {
+        String::from("floatrates.com")
+    }
+
+    // latest exchange rate
+
     fn latest(&self, base: &String) -> ExchangeRate {
         let reply = self.retrieve(base);
         ExchangeRate {

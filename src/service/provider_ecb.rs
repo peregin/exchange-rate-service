@@ -36,6 +36,11 @@ impl EcbRateProvider {
 }
 
 impl RateProvider for EcbRateProvider {
+    fn provider_name(&self) -> String {
+        String::from("European Central Bank")
+    }
+
+
     fn latest(&self, base: &String) -> ExchangeRate {
         let reply = self.get(&format!("latest?from={}", base));
         let reply = reply.json::<ExchangeRate>().unwrap();
@@ -48,6 +53,8 @@ impl RateProvider for EcbRateProvider {
         reply.json::<HashMap<String, String>>().unwrap()
     }
 
+    // wip
+    #[allow(unused)]
     fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
         let iso_from = from.format("%Y-%m-%d").to_string();
         let iso_to = to.format("%Y-%m-%d").to_string();

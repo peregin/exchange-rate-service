@@ -3,8 +3,12 @@ use actix_web::rt::task::spawn_blocking;
 use chrono::{DateTime, Utc};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::service::provider::{symbols, rates_of, historical_rates_of};
+use crate::service::provider::{symbols, rates_of, historical_rates_of, RateProvider};
 use crate::route::model::ExchangeRate;
+use crate::service::provider_ecb::EcbRateProvider;
+use crate::service::provider_float::FloatRateProvider;
+
+type Providers = Vec<Box<dyn RateProvider>>;
 
 #[utoipa::path(
     get,
@@ -14,9 +18,9 @@ use crate::route::model::ExchangeRate;
     )
 )]
 #[get("/api/rates/currencies")]
-async fn currencies() -> impl Responder {
+async fn currencies(data: web::Data<Providers>) -> impl Responder {
     spawn_blocking(move || {
-        let pairs = symbols();
+        let pairs = symbols(data.get_ref());
         let sorted = pairs.iter().map(|(k, v)| (k.to_uppercase(), v.clone())).collect::<std::collections::BTreeMap<_, _>>();
         web::Json(sorted)
     }).await.unwrap()
@@ -120,9 +124,13 @@ async fn historical_rates(params: web::Path<String>) -> HttpResponse {
 struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
-    // would it make sense to have the providers as application data?
-    //let provider: Box<dyn crate::service::provider::RateProvider> = Box::new(ECBRateProvider::new());
-    //config.app_data(web::Data::new(provider));
+    // have the providers as application data or state,
+    // initialize once, with Box put it on the heap
+    let providers: Providers = vec![
+        Box::new(EcbRateProvider::new()),
+        Box::new(FloatRateProvider::new()),
+    ];
+    config.app_data(web::Data::new(providers));
 
     config.service(currencies);
     config.service(rates);

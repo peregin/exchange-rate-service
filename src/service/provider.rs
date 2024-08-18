@@ -1,5 +1,6 @@
 use cached::proc_macro::cached;
 use std::collections::HashMap;
+use std::hash::Hash;
 use chrono::{DateTime, Utc};
 use time::Date;
 
@@ -8,7 +9,10 @@ use crate::service::provider_ecb::EcbRateProvider;
 use crate::service::provider_float::FloatRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
-pub trait RateProvider {
+pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
+
+    fn provider_name(&self) -> String;
+
     fn latest(&self, base: &String) -> ExchangeRate;
 
     // iso3 -> description
@@ -26,12 +30,12 @@ pub fn rates_of(base: String) -> ExchangeRate {
 }
 
 // map of ISO3 code -> description
-#[cached(time = 3600)]
-pub fn symbols() -> HashMap<String, String> {
-    let ecb = EcbRateProvider::new().symbols();
-    let float = FloatRateProvider::new().symbols();
-    // merge 2 hashmaps with the supported symbols together
-    ecb.into_iter().chain(float.into_iter()).collect()
+// TODO: to make it cacheable
+//#[cached(time = 3600)]
+pub fn symbols(providers: &Vec<Box<dyn RateProvider>>) -> HashMap<String, String> {
+    providers.iter().map(|p| p.symbols())
+        .reduce(|a, b| a.into_iter().chain(b.into_iter())
+            .collect()).unwrap_or_else(HashMap::new)
 }
 
 #[cached(time = 3600)]
