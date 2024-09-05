@@ -33,7 +33,7 @@ RUN cargo build --release
 ## Final image
 ####################################################################################################
 #FROM debian:bookworm-slim - security issue
-FROM debian:buster-slim
+FROM debian:bookworm-20240722-slim
 
 RUN apt-get update -y && \
     apt-get dist-upgrade -y && \
