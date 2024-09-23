@@ -18,6 +18,7 @@ else
     echo "buildx does not exist... creating it..."
     docker buildx create --name multi-arch-builder
 fi
+docker buildx use multi-arch-builder
 docker buildx build --platform linux/amd64,linux/arm64 -t peregin/velocorner.rates:latest --push .
 
 # test the image if needed
