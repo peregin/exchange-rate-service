@@ -20,7 +20,7 @@ jobs:
 
   restart_stack:
     docker:
-      - image: cimg/base:2021.04
+      - image: cimg/base:2024.09
     resource_class: small
     steps:
       - add_ssh_keys:
