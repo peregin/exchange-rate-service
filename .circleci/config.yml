@@ -6,7 +6,7 @@ defaults:
 jobs:
   deploy_rates-backend:
     docker:
-      - image: cimg/base:2021.04
+      - image: cimg/base:2024.09
     steps:
       - checkout
       - setup_remote_docker:
