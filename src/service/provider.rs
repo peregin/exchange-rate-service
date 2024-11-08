@@ -10,7 +10,6 @@ use crate::service::provider_float::FloatRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
 pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
-
     fn provider_name(&self) -> String;
 
     fn latest(&self, base: &String) -> ExchangeRate;
@@ -31,11 +30,11 @@ pub fn rates_of(base: String) -> ExchangeRate {
 
 // map of ISO3 code -> description
 // TODO: to make it cacheable
-//#[cached(time = 3600)]
-pub fn symbols(providers: &Vec<Box<dyn RateProvider>>) -> HashMap<String, String> {
-    providers.iter().map(|p| p.symbols())
-        .reduce(|a, b| a.into_iter().chain(b.into_iter())
-            .collect()).unwrap_or_else(HashMap::new)
+// use caching on individual providers - level
+// #[cached(time = 3600)]
+pub fn symbols(providers: &[Box<dyn RateProvider>]) -> HashMap<String, String> {
+    providers.iter().flat_map(|p| p.symbols().into_iter())
+        .collect()
 }
 
 #[cached(time = 3600)]

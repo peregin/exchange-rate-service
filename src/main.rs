@@ -6,8 +6,10 @@ use actix_cors::Cors;
 use log::{debug, info};
 use regex::Regex;
 
-const ALLOWED_ORIGINS: &str = r".*(localhost|peregin\.com|velocorner\.com)";
+use std::sync::LazyLock;
 
+// TODO: use async all the way down -> then caching sort out differently
+// TODO: don't use unwrap
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
@@ -15,12 +17,11 @@ async fn main() -> std::io::Result<()> {
     info!("starting exchange service on port {port} ...");
 
     HttpServer::new(|| {
-        let origins_regex = Regex::new(ALLOWED_ORIGINS).unwrap();
         let cors = Cors::permissive()
             .allowed_origin_fn(move |origin_header, _request_head| {
                 let origin = origin_header.to_str().unwrap();
                 debug!("origin: {origin}");
-                is_allowed_origin(origin, &origins_regex)
+                is_allowed_origin(origin)
             });
         App::new().wrap(cors).configure(route::route::init_routes)
     })
@@ -29,8 +30,11 @@ async fn main() -> std::io::Result<()> {
         .await
 }
 
-fn is_allowed_origin(origin: &str, origins_regex: &Regex) -> bool {
-    origins_regex.is_match(origin)
+
+fn is_allowed_origin(origin: &str) -> bool {
+    const ALLOWED_ORIGINS: &str = r".*(localhost|peregin\.com|velocorner\.com)";
+    static ORIGINS_REGEX: LazyLock<Regex, fn() -> Regex> = LazyLock::new(|| Regex::new(ALLOWED_ORIGINS).unwrap());
+    ORIGINS_REGEX.is_match(origin)
 }
 
 #[cfg(test)]
@@ -39,16 +43,14 @@ mod tests {
 
     #[test]
     fn test_is_allowed_origin() {
-        let origins_regex = Regex::new(ALLOWED_ORIGINS).unwrap();
-
         // Test allowed origins
-        assert!(is_allowed_origin("https://www.peregin.com", &origins_regex));
-        assert!(is_allowed_origin("https://rates.velocorner.com", &origins_regex));
-        assert!(is_allowed_origin("http://localhost:8000", &origins_regex));
-        assert!(is_allowed_origin("http://localhost:3000", &origins_regex));
+        assert!(is_allowed_origin("https://www.peregin.com"));
+        assert!(is_allowed_origin("https://rates.velocorner.com"));
+        assert!(is_allowed_origin("http://localhost:8000"));
+        assert!(is_allowed_origin("http://localhost:3000"));
 
         // Test disallowed origins
-        assert!(!is_allowed_origin("https://www.example.org", &origins_regex));
-        assert!(!is_allowed_origin("http://127.0.0.1", &origins_regex));
+        assert!(!is_allowed_origin("https://www.example.org"));
+        assert!(!is_allowed_origin("http://127.0.0.1"));
     }
 }

@@ -1,12 +1,12 @@
-use actix_web::{get, HttpResponse, Responder, web};
+use crate::route::model::ExchangeRate;
+use crate::service::provider::{historical_rates_of, rates_of, symbols, RateProvider};
+use crate::service::provider_ecb::EcbRateProvider;
+use crate::service::provider_float::FloatRateProvider;
 use actix_web::rt::task::spawn_blocking;
+use actix_web::{get, web, HttpResponse, Responder};
 use chrono::{DateTime, Utc};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::service::provider::{symbols, rates_of, historical_rates_of, RateProvider};
-use crate::route::model::ExchangeRate;
-use crate::service::provider_ecb::EcbRateProvider;
-use crate::service::provider_float::FloatRateProvider;
 
 type Providers = Vec<Box<dyn RateProvider>>;
 
@@ -14,12 +14,15 @@ type Providers = Vec<Box<dyn RateProvider>>;
     get,
     tag = "rates",
     responses(
-        (status = 200, description = "List supported currencies", body = HashMap < String, String >, example = json ! ({"CHF": "Swiss Franc", "USD": "U.S. Dollar", "EUR": "Euro", "KES": "Kenyan shilling"}))
+        (status = 200, description = "List supported currencies",
+        body = HashMap < String, String >,
+        example = json ! ({"CHF": "Swiss Franc", "USD": "U.S. Dollar", "EUR": "Euro", "KES": "Kenyan shilling"}))
     )
 )]
 #[get("/api/rates/currencies")]
 async fn currencies(data: web::Data<Providers>) -> impl Responder {
     spawn_blocking(move || {
+        // TODO: don't pass the list of providers here - caching will be done on provider level anyway
         let pairs = symbols(data.get_ref());
         let sorted = pairs.iter().map(|(k, v)| (k.to_uppercase(), v.clone())).collect::<std::collections::BTreeMap<_, _>>();
         web::Json(sorted)
@@ -47,7 +50,9 @@ async fn rates(info: web::Path<String>) -> impl Responder {
     spawn_blocking(move || {
         let exchanges = rates_of(base);
         web::Json(exchanges)
-    }).await.unwrap()
+    })
+    .await
+    .unwrap()
 }
 
 #[utoipa::path(
@@ -69,9 +74,9 @@ async fn rates(info: web::Path<String>) -> impl Responder {
 #[get("/api/rates/{base}/{counter}")]
 async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     let (base, counter) = params.into_inner();
-    let exchanges = spawn_blocking(move || {
-        rates_of(base.to_uppercase())
-    }).await.unwrap();
+    let exchanges = spawn_blocking(move || rates_of(base.to_uppercase()))
+        .await
+        .unwrap();
     match exchanges.rates.get(&counter.to_uppercase()) {
         Some(fx) => HttpResponse::Ok().json(fx),
         None => HttpResponse::NotFound().finish(),
@@ -96,9 +101,9 @@ async fn historical_rates(params: web::Path<String>) -> HttpResponse {
     let base = params.into_inner().to_uppercase();
     let now: DateTime<Utc> = Utc::now();
     let last_month: DateTime<Utc> = now - chrono::Duration::days(30);
-    let series = spawn_blocking(move || {
-        historical_rates_of(base.to_uppercase(), last_month, now)
-    }).await.unwrap();
+    let series = spawn_blocking(move || historical_rates_of(base.to_uppercase(), last_month, now))
+        .await
+        .unwrap();
     HttpResponse::Ok().json(series)
 }
 

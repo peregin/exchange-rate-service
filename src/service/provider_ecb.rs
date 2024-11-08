@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use crate::route::model::ExchangeRate;
+use crate::service::provider::RateProvider;
 use chrono::{DateTime, Utc};
 use log::info;
 use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use time::Date;
-use crate::route::model::ExchangeRate;
-use crate::service::provider::RateProvider;
 
 pub struct EcbRateProvider;
 
@@ -40,7 +40,6 @@ impl RateProvider for EcbRateProvider {
         String::from("European Central Bank")
     }
 
-
     fn latest(&self, base: &String) -> ExchangeRate {
         let reply = self.get(&format!("latest?from={}", base));
         let reply = reply.json::<ExchangeRate>().unwrap();
@@ -55,7 +54,12 @@ impl RateProvider for EcbRateProvider {
 
     // wip
     #[allow(unused)]
-    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
+    fn historical(
+        &self,
+        base: &String,
+        from: &DateTime<Utc>,
+        to: &DateTime<Utc>,
+    ) -> HashMap<Date, ExchangeRate> {
         let iso_from = from.format("%Y-%m-%d").to_string();
         let iso_to = to.format("%Y-%m-%d").to_string();
         let reply = self.get(&format!("{}..{}?from={}", iso_from, iso_to, base));
