@@ -25,7 +25,7 @@ impl EcbRateProvider {
         EcbRateProvider
     }
 
-    fn retrieve(&self, path: &String) -> Response {
+    fn retrieve(&self, path: &str) -> Response {
         let client = Client::new();
         client
             .get(format!("{}/{}", EcbRateProvider::HOST, path))
