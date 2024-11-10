@@ -43,8 +43,8 @@ impl FloatRateProvider {
 }
 
 impl RateProvider for FloatRateProvider {
-    fn provider_name(&self) -> String {
-        String::from("floatrates.com")
+    fn provider_name(&self) -> &'static str {
+        "floatrates.com"
     }
 
     // latest exchange rate

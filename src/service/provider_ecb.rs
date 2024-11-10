@@ -5,6 +5,7 @@ use log::info;
 use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use time::Date;
 
 pub struct EcbRateProvider;
@@ -36,8 +37,8 @@ impl EcbRateProvider {
 }
 
 impl RateProvider for EcbRateProvider {
-    fn provider_name(&self) -> String {
-        String::from("European Central Bank")
+    fn provider_name(&self) -> &'static str {
+        "European Central Bank"
     }
 
     fn latest(&self, base: &str) -> ExchangeRate {

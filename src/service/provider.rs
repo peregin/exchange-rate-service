@@ -10,7 +10,7 @@ use crate::service::provider_float::FloatRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
 pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
-    fn provider_name(&self) -> String;
+    fn provider_name(&self) -> &'static str;
 
     fn latest(&self, base: &str) -> ExchangeRate;
 
