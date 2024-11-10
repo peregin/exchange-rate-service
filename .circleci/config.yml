@@ -7,6 +7,7 @@ jobs:
   deploy_rates-backend:
     docker:
       - image: cimg/base:2024.09
+    resource_class: medium
     steps:
       - checkout
       - setup_remote_docker:
