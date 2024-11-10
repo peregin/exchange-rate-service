@@ -1,7 +1,7 @@
 # builder layer
 FROM alpine:3.20 AS builder
 
-ENV RUST_VERSION=1.78.0
+ENV RUST_VERSION=1.82.0
 ENV PATH=$PATH:/root/.cargo/bin
 
 RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld
