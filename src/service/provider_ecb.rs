@@ -24,7 +24,7 @@ impl EcbRateProvider {
         EcbRateProvider
     }
 
-    fn get(&self, path: &String) -> Response {
+    fn retrieve(&self, path: &String) -> Response {
         let client = Client::new();
         client
             .get(format!("{}/{}", EcbRateProvider::HOST, path))
@@ -41,14 +41,14 @@ impl RateProvider for EcbRateProvider {
     }
 
     fn latest(&self, base: &str) -> ExchangeRate {
-        let reply = self.get(&format!("latest?from={}", base));
+        let reply = self.retrieve(&format!("latest?from={}", base));
         let reply = reply.json::<ExchangeRate>().unwrap();
         info!("base={:#?}, {:#?} rates", base, reply.rates.keys().len());
         reply
     }
 
     fn symbols(&self) -> HashMap<String, String> {
-        let reply = self.get(&String::from("currencies"));
+        let reply = self.retrieve(&String::from("currencies"));
         reply.json::<HashMap<String, String>>().unwrap()
     }
 
@@ -62,7 +62,7 @@ impl RateProvider for EcbRateProvider {
     ) -> HashMap<Date, ExchangeRate> {
         let iso_from = from.format("%Y-%m-%d").to_string();
         let iso_to = to.format("%Y-%m-%d").to_string();
-        let reply = self.get(&format!("{}..{}?from={}", iso_from, iso_to, base));
+        let reply = self.retrieve(&format!("{}..{}?from={}", iso_from, iso_to, base));
         // reply.json::<EcbRateHistory>().unwrap().rates.into_iter().map(|(date, rates)| {
         //     (DateTime::parse_from_str(&date, "%Y-%m-%d").unwrap(), ExchangeRate { base: base.to_owned(), rates })
         // }).map(|(date, rates)| {
