@@ -1,7 +1,6 @@
 use cached::proc_macro::cached;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
-use std::hash::Hash;
 use time::Date;
 
 use crate::route::model::ExchangeRate;
@@ -19,7 +18,7 @@ pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
 
     fn historical(
         &self,
-        base: &String,
+        base: &str,
         from: &DateTime<Utc>,
         to: &DateTime<Utc>,
     ) -> HashMap<Date, ExchangeRate>;

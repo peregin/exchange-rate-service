@@ -5,7 +5,6 @@ use log::info;
 use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 use time::Date;
 
 pub struct EcbRateProvider;
@@ -57,7 +56,7 @@ impl RateProvider for EcbRateProvider {
     #[allow(unused)]
     fn historical(
         &self,
-        base: &String,
+        base: &str,
         from: &DateTime<Utc>,
         to: &DateTime<Utc>,
     ) -> HashMap<Date, ExchangeRate> {

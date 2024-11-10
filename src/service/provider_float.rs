@@ -66,7 +66,7 @@ impl RateProvider for FloatRateProvider {
 
     fn historical(
         &self,
-        _base: &String,
+        _base: &str,
         _from: &DateTime<Utc>,
         _to: &DateTime<Utc>,
     ) -> HashMap<Date, ExchangeRate> {
