@@ -4,7 +4,7 @@ FROM alpine:3.20 AS builder
 ENV RUST_VERSION=1.82.0
 ENV PATH=$PATH:/root/.cargo/bin
 
-RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld
+RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl
 RUN rustup-init --profile default --default-toolchain $RUST_VERSION -y -t "$(uname -m)-unknown-linux-musl"
 RUN rustup update
 

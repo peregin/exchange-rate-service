@@ -16,9 +16,6 @@ jobs:
           name: dockerhub login
           command: docker login -u peregin -p $DOCKERHUB_PASSWORD docker.io
       - run:
-          name: install curl
-          command: sudo apt-get install -y curl
-      - run:
           name: deploy exchange-rate service
           command: ./deploy.sh
 
