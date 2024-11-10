@@ -40,7 +40,7 @@ impl RateProvider for EcbRateProvider {
         String::from("European Central Bank")
     }
 
-    fn latest(&self, base: &String) -> ExchangeRate {
+    fn latest(&self, base: &str) -> ExchangeRate {
         let reply = self.get(&format!("latest?from={}", base));
         let reply = reply.json::<ExchangeRate>().unwrap();
         info!("base={:#?}, {:#?} rates", base, reply.rates.keys().len());

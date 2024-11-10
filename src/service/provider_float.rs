@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use crate::route::model::ExchangeRate;
+use crate::service::provider::RateProvider;
 use chrono::{DateTime, Utc};
 use log::info;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use time::Date;
-use crate::route::model::ExchangeRate;
-use crate::service::provider::RateProvider;
 
 pub struct FloatRateProvider;
 
@@ -24,10 +24,14 @@ impl FloatRateProvider {
         FloatRateProvider
     }
 
-    fn retrieve(&self, base: &String) -> Vec<FloatRateEntry> {
+    fn retrieve(&self, base: &str) -> Vec<FloatRateEntry> {
         let client = Client::new();
         let reply = client
-            .get(format!("{}/daily/{}.json", FloatRateProvider::HOST, base.to_lowercase()))
+            .get(format!(
+                "{}/daily/{}.json",
+                FloatRateProvider::HOST,
+                base.to_lowercase()
+            ))
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")
             .send()
@@ -39,14 +43,13 @@ impl FloatRateProvider {
 }
 
 impl RateProvider for FloatRateProvider {
-
     fn provider_name(&self) -> String {
         String::from("floatrates.com")
     }
 
     // latest exchange rate
 
-    fn latest(&self, base: &String) -> ExchangeRate {
+    fn latest(&self, base: &str) -> ExchangeRate {
         let reply = self.retrieve(base);
         ExchangeRate {
             base: base.to_owned(),
@@ -55,10 +58,18 @@ impl RateProvider for FloatRateProvider {
     }
 
     fn symbols(&self) -> HashMap<String, String> {
-        self.retrieve(&String::from("CHF")).into_iter().map(|e| (e.code, e.name)).collect()
+        self.retrieve(&String::from("CHF"))
+            .into_iter()
+            .map(|e| (e.code, e.name))
+            .collect()
     }
 
-    fn historical(&self, _base: &String, _from: &DateTime<Utc>, _to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
+    fn historical(
+        &self,
+        _base: &String,
+        _from: &DateTime<Utc>,
+        _to: &DateTime<Utc>,
+    ) -> HashMap<Date, ExchangeRate> {
         unimplemented!()
     }
 }

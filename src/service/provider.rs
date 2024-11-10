@@ -1,7 +1,7 @@
 use cached::proc_macro::cached;
+use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::hash::Hash;
-use chrono::{DateTime, Utc};
 use time::Date;
 
 use crate::route::model::ExchangeRate;
@@ -12,12 +12,17 @@ use crate::service::provider_float::FloatRateProvider;
 pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
     fn provider_name(&self) -> String;
 
-    fn latest(&self, base: &String) -> ExchangeRate;
+    fn latest(&self, base: &str) -> ExchangeRate;
 
     // iso3 -> description
     fn symbols(&self) -> HashMap<String, String>;
 
-    fn historical(&self, base: &String, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate>;
+    fn historical(
+        &self,
+        base: &String,
+        from: &DateTime<Utc>,
+        to: &DateTime<Utc>,
+    ) -> HashMap<Date, ExchangeRate>;
 }
 
 #[cached(time = 3600)]
@@ -33,13 +38,17 @@ pub fn rates_of(base: String) -> ExchangeRate {
 // use caching on individual providers - level
 // #[cached(time = 3600)]
 pub fn symbols(providers: &[Box<dyn RateProvider>]) -> HashMap<String, String> {
-    providers.iter().flat_map(|p| p.symbols().into_iter())
+    providers
+        .iter()
+        .flat_map(|p| p.symbols().into_iter())
         .collect()
 }
 
 #[cached(time = 3600)]
-pub fn historical_rates_of(base: String, from: DateTime<Utc>, to: DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
+pub fn historical_rates_of(
+    base: String,
+    from: DateTime<Utc>,
+    to: DateTime<Utc>,
+) -> HashMap<Date, ExchangeRate> {
     EcbRateProvider::new().historical(&base, &from, &to)
 }
-
-
