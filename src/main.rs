@@ -1,12 +1,16 @@
 mod route;
 mod service;
 
-use actix_web::{App, HttpServer};
+use actix_web::{http, App, HttpServer};
 use actix_cors::Cors;
 use log::{debug, info};
 use regex::Regex;
 
 use std::sync::LazyLock;
+use actix_web::dev::ServiceResponse;
+use actix_web::http::header::HeaderValue;
+use actix_web::http::StatusCode;
+use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
 
 // TODO: use async all the way down -> then caching sort out differently
 // TODO: don't use unwrap
@@ -23,11 +27,31 @@ async fn main() -> std::io::Result<()> {
                 debug!("origin: {origin}");
                 is_allowed_origin(origin)
             });
-        App::new().wrap(cors).configure(route::route::init_routes)
+        App::new()
+            .wrap(cors)
+            .wrap(ErrorHandlers::new().handler(http::StatusCode::INTERNAL_SERVER_ERROR, render_500))
+            .configure(route::route::init_routes)
     })
         .bind(format!("0.0.0.0:{port}"))?
         .run()
         .await
+}
+
+fn render_500<B, E>(mut res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>, E> {
+    let response = res.response_mut();
+
+    // Set proper content type for error response
+    response.headers_mut().insert(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("application/json"),
+    );
+
+    // Set proper status code if not already set
+    *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+
+    // If you want to modify the body, you'll need to handle the body type appropriately
+    // This depends on your specific needs and the body type B
+    Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
 }
 
 

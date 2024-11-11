@@ -3,6 +3,7 @@ use crate::service::provider::{historical_rates_of, rates_of, symbols};
 use actix_web::rt::task::spawn_blocking;
 use actix_web::{get, web, HttpResponse, Responder};
 use chrono::{DateTime, Utc};
+use std::arch::x86_64::_mm_add_pd;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -19,9 +20,45 @@ use utoipa_swagger_ui::SwaggerUi;
 async fn currencies() -> impl Responder {
     spawn_blocking(move || {
         let pairs = symbols();
-        let sorted = pairs.iter().map(|(k, v)| (k.to_uppercase(), v.clone())).collect::<std::collections::BTreeMap<_, _>>();
+        let sorted = pairs
+            .iter()
+            .map(|(k, v)| (k.to_uppercase(), v.clone()))
+            .collect::<std::collections::BTreeMap<_, _>>();
         web::Json(sorted)
-    }).await.unwrap()
+    })
+    .await
+    .unwrap()
+}
+
+#[utoipa::path(
+    get,
+    tag = "rates",
+    params(
+        ("base" = String, Path, example = "CHF"),
+    ),
+    responses(
+        (
+        status = 200,
+        body = HashMap < time::Date, ExchangeRate >,
+        description = "Time series of the exchange rates, back to given days or today",
+        )
+    )
+)]
+#[get("/api/rates/historical/{base}")]
+async fn historical_rates(params: web::Path<String>) -> HttpResponse {
+    let base = params.into_inner().to_uppercase();
+    let now: DateTime<Utc> = Utc::now();
+    let last_month: DateTime<Utc> = now - chrono::Duration::days(30);
+    let series = spawn_blocking(move || {
+        // map keys can be String only!!! convert Date to String
+        historical_rates_of(base.to_uppercase(), last_month, now)
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.clone()))
+            .collect::<std::collections::BTreeMap<_, _>>()
+    })
+    .await
+    .unwrap();
+    HttpResponse::Ok().json(series)
 }
 
 #[utoipa::path(
@@ -34,7 +71,7 @@ async fn currencies() -> impl Responder {
         (
         status = 200,
         description = "List actual exchange rates with the given base currency",
-        body = [ExchangeRate],
+        body = ExchangeRate,
         example = json ! ({"base": "CHF", "rates": {"USD": 1.1204, "EUR": 1.0305, "JPY": 174.9}})
         )
     )
@@ -60,8 +97,8 @@ async fn rates(info: web::Path<String>) -> impl Responder {
     responses(
         (
         status = 200,
-        description = "List actual exchange rate for the given base and counter currencies",
-        body = [f32],
+        description = "Actual exchange rate for the given base and counter currencies",
+        body = f32,
         example = json ! (1.0305)
         )
     )
@@ -78,30 +115,6 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     }
 }
 
-#[utoipa::path(
-    get,
-    tag = "rates",
-    params(
-        ("base" = String, Path, example = "CHF"),
-    ),
-    responses(
-        (
-        status = 200,
-        description = "Time series of the exchange rates, back to the given days or today",
-        )
-    )
-)]
-#[get("/api/rates/historical/{base}")]
-async fn historical_rates(params: web::Path<String>) -> HttpResponse {
-    let base = params.into_inner().to_uppercase();
-    let now: DateTime<Utc> = Utc::now();
-    let last_month: DateTime<Utc> = now - chrono::Duration::days(30);
-    let series = spawn_blocking(move || historical_rates_of(base.to_uppercase(), last_month, now))
-        .await
-        .unwrap();
-    HttpResponse::Ok().json(series)
-}
-
 #[derive(OpenApi)]
 #[openapi(
     info(
@@ -114,9 +127,7 @@ async fn historical_rates(params: web::Path<String>) -> HttpResponse {
         rate,
         historical_rates,
     ),
-    components(schemas(
-        ExchangeRate
-    )),
+    components(schemas(ExchangeRate)),
     tags(
         (name = "rates", description = "Exchange rates")
     ),
@@ -125,8 +136,8 @@ struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
     config.service(currencies);
+    config.service(historical_rates); // must be defined earlier, otherwise path is considered as parameter (historical={base})
     config.service(rates);
     config.service(rate);
-    config.service(historical_rates);
     config.service(SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()));
 }

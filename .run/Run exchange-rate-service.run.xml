@@ -42,7 +42,8 @@
     <option name="command" value="run --package exchange-rate-service --bin exchange-rate-service" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs>
-      <env name="RUST_LOG" value="info" />
+      <env name="RUST_LOG" value="debug" />
+      <env name="RUST_BACKTRACE" value="1" />
     </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />

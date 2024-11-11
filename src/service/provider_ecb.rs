@@ -6,6 +6,7 @@ use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use time::Date;
+use time::format_description::well_known::Iso8601;
 
 pub struct EcbRateProvider;
 
@@ -35,6 +36,8 @@ impl EcbRateProvider {
     }
 }
 
+const ISO_FORMAT: &'static str = "%Y-%m-%d";
+
 impl RateProvider for EcbRateProvider {
     fn provider_name(&self) -> &'static str {
         "European Central Bank"
@@ -52,22 +55,28 @@ impl RateProvider for EcbRateProvider {
         reply.json::<HashMap<String, String>>().unwrap()
     }
 
-    // wip
-    #[allow(unused)]
     fn historical(
         &self,
         base: &str,
         from: &DateTime<Utc>,
         to: &DateTime<Utc>,
     ) -> HashMap<Date, ExchangeRate> {
-        let iso_from = from.format("%Y-%m-%d").to_string();
-        let iso_to = to.format("%Y-%m-%d").to_string();
+        let iso_from = from.format(ISO_FORMAT).to_string();
+        let iso_to = to.format(ISO_FORMAT).to_string();
         let reply = self.retrieve(&format!("{}..{}?from={}", iso_from, iso_to, base));
-        // reply.json::<EcbRateHistory>().unwrap().rates.into_iter().map(|(date, rates)| {
-        //     (DateTime::parse_from_str(&date, "%Y-%m-%d").unwrap(), ExchangeRate { base: base.to_owned(), rates })
-        // }).map(|(date, rates)| {
-        //     (date.date(), rates)
-        // }).collect()
-        unimplemented!()
+
+        let format = Iso8601::DATE;
+        let rate_history: EcbRateHistory = reply.json::<EcbRateHistory>().unwrap();
+        //println!("rate_history={:#?}", rate_history);
+        rate_history.rates.into_iter()
+            .map(|(date, rates)| {
+                let iso_date = Date::parse(&date, &format).unwrap();
+                let exchange_rate = ExchangeRate {
+                    base: base.to_string(),
+                    rates,
+                };
+                (iso_date, exchange_rate)
+            })
+            .collect()
     }
 }
