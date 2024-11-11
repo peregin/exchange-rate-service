@@ -14,11 +14,17 @@ pub struct ExchangeRate {
 }
 
 impl ExchangeRate {
-
     pub fn chain(&self, that: ExchangeRate) -> ExchangeRate {
         ExchangeRate {
             base: that.base,
             rates: self.rates.clone().into_iter().chain(that.rates).collect(),
+        }
+    }
+
+    pub fn empty(base: &str) -> ExchangeRate {
+        ExchangeRate {
+            base:  base.to_string(),
+            rates: HashMap::new(),
         }
     }
 }
@@ -59,4 +65,3 @@ mod tests {
         assert_eq!(chained.rates.get("JPY"), Some(&120.0));
     }
 }
-
