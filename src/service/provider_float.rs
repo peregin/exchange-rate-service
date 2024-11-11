@@ -1,6 +1,5 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::RateProvider;
-use chrono::{DateTime, Utc};
 use log::info;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
@@ -67,9 +66,39 @@ impl RateProvider for FloatRateProvider {
     fn historical(
         &self,
         _base: &str,
-        _from: &DateTime<Utc>,
-        _to: &DateTime<Utc>,
+        _from: &Date,
+        _to: &Date,
     ) -> HashMap<Date, ExchangeRate> {
-        unimplemented!()
+        HashMap::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use time::Month::November;
+    use super::*;
+
+    #[test]
+    fn test_historical_empty_response() {
+        let provider = FloatRateProvider::new(); // Replace with your actual provider struct
+        let base = "USD";
+        let from = Date::from_calendar_date(2023, time::Month::January, 1).unwrap();
+        let to= Date::from_calendar_date(2024, November, 11).unwrap();
+
+        let result = provider.historical(base, &from, &to);
+
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_historical_date_range() {
+        let provider = FloatRateProvider::new();
+        let base = "EUR";
+        let from = Date::from_calendar_date(2024, November, 11).unwrap();
+        let to = from + time::Duration::days(10);
+
+        let result = provider.historical(base, &from, &to);
+
+        assert!(result.is_empty());
     }
 }

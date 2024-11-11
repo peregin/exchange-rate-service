@@ -1,5 +1,4 @@
 use cached::proc_macro::cached;
-use chrono::{DateTime, Utc};
 use log::info;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -18,12 +17,7 @@ pub trait RateProvider: Sync + Send {
     // iso3 -> description
     fn symbols(&self) -> HashMap<String, String>;
 
-    fn historical(
-        &self,
-        base: &str,
-        from: &DateTime<Utc>,
-        to: &DateTime<Utc>,
-    ) -> HashMap<Date, ExchangeRate>;
+    fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate>;
 }
 
 type Providers = Vec<Box<dyn RateProvider>>;
@@ -50,18 +44,18 @@ fn get_providers() -> &'static Providers {
 
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
-    rates_of_with(base, get_providers)
+    rates_of_with(&base, get_providers)
 }
 
-fn rates_of_with<F>(base: String, providers_fn: F) -> ExchangeRate
+fn rates_of_with<F>(base: &str, providers_fn: F) -> ExchangeRate
 where
     F: Fn() -> &'static Providers,
 {
-    let rates = providers_fn()
-        .iter()
-        .map(|p| p.latest(&base));
+    let rates = providers_fn().iter().map(|p| p.latest(base));
     // merge with priority (ECB rates overrides floating rates)
-    rates.fold(ExchangeRate::empty(&base), |acc, current| current.chain(acc))
+    rates.fold(ExchangeRate::empty(base), |acc, current| {
+        current.chain(acc)
+    })
 }
 
 // map of ISO3 code -> description
@@ -74,20 +68,41 @@ pub fn symbols() -> HashMap<String, String> {
 }
 
 #[cached(time = 3600)]
-pub fn historical_rates_of(
-    base: String,
-    from: DateTime<Utc>,
-    to: DateTime<Utc>,
-) -> HashMap<Date, ExchangeRate> {
-    EcbRateProvider::new().historical(&base, &from, &to)
+pub fn historical_rates_of(base: String, from: Date, to: Date) -> HashMap<Date, ExchangeRate> {
+    historical_rates_of_with(&base, from, to, get_providers)
 }
 
+fn historical_rates_of_with<F>(
+    base: &str,
+    from: Date,
+    to: Date,
+    providers_fn: F,
+) -> HashMap<Date, ExchangeRate>
+where
+    F: Fn() -> &'static Providers,
+{
+    let rates = providers_fn().iter().flat_map(|p| {
+        p.historical(base, &from, &to).into_iter()
+    });
+    // merge with priority (ECB rates overrides floating rates)
+    rates.fold(HashMap::new(), |mut acc, (date, current)| {
+        if let Some(existing) = acc.get_mut(&date) {
+            *existing = current.chain(existing.clone());
+        } else {
+            acc.insert(date, current);
+        }
+        acc
+    })
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::collections::HashMap;
+    use std::ops::Add;
     use std::sync::OnceLock;
+    use time::Month::November;
+    use time::{Duration, Month};
 
     // Mock provider for testing
     struct MockProvider {
@@ -112,8 +127,33 @@ mod tests {
             todo!()
         }
 
-        fn historical(&self, base: &str, from: &DateTime<Utc>, to: &DateTime<Utc>) -> HashMap<Date, ExchangeRate> {
-            todo!()
+        fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
+            // days between from and to
+            let days = to.to_julian_day() - from.to_julian_day();
+            // iterate between from until to and create ExchangeRate for each day
+            let mut rates = HashMap::new();
+            for i in 0..=days {
+                let date = from.add(Duration::days(i as i64));
+                let exchange_rate = ExchangeRate {
+                    base: base.to_string(),
+                    // add 1 to each rate to make it different from the base
+                    // and make it easier to test
+                    // 1.1, 1.2, 1.3, ...
+                    rates: self
+                        .rates
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v + i as f32 + 1.0))
+                        .collect(),
+                };
+                let next: Date = Date::from_calendar_date(
+                    date.year() as i32,
+                    Month::try_from(date.month() as u8).unwrap(),
+                    date.day() as u8,
+                )
+                    .unwrap();
+                rates.insert(next, exchange_rate);
+            }
+            rates
         }
     }
 
@@ -129,7 +169,7 @@ mod tests {
         static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         MOCK_PROVIDERS.get_or_init(|| vec![Box::new(mock_provider)]);
 
-        let result = rates_of_with("EUR".to_string(), || MOCK_PROVIDERS.get().unwrap());
+        let result = rates_of_with("EUR", || MOCK_PROVIDERS.get().unwrap());
 
         assert_eq!(result.base, "EUR");
         assert_eq!(result.rates.len(), 2);
@@ -158,12 +198,9 @@ mod tests {
         };
         static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS.get_or_init(|| vec![
-            Box::new(ecb_provider),
-            Box::new(floating_provider),
-        ]);
+        MOCK_PROVIDERS.get_or_init(|| vec![Box::new(ecb_provider), Box::new(floating_provider)]);
 
-        let result = rates_of_with("EUR".to_string(), || MOCK_PROVIDERS.get().unwrap());
+        let result = rates_of_with("EUR", || MOCK_PROVIDERS.get().unwrap());
 
         assert_eq!(result.base, "EUR");
         assert_eq!(result.rates.len(), 3);
@@ -176,10 +213,46 @@ mod tests {
     fn test_rates_of_empty_providers() {
         static TEST_PROVIDERS: Providers = vec![];
 
-        let result = rates_of_with("EUR".to_string(), || &TEST_PROVIDERS);
+        let result = rates_of_with("EUR", || &TEST_PROVIDERS);
 
         assert_eq!(result.base, "EUR");
         assert!(result.rates.is_empty());
     }
-}
 
+    #[test]
+    fn test_historical_of_multiple_providers_with_priority() {
+        // Arrange
+        let mut ecb_rates = HashMap::new();
+        ecb_rates.insert("USD".to_string(), 1.1);
+        ecb_rates.insert("GBP".to_string(), 0.85);
+
+        let mut floating_rates = HashMap::new();
+        floating_rates.insert("USD".to_string(), 1.2); // Should be overridden by ECB
+        floating_rates.insert("JPY".to_string(), 130.0); // Should be included
+
+        let ecb_provider = MockProvider {
+            name: "ECB".to_string(),
+            rates: ecb_rates,
+        };
+        let floating_provider = MockProvider {
+            name: "Floating".to_string(),
+            rates: floating_rates,
+        };
+        static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
+        // use the same order as in the real providers
+        MOCK_PROVIDERS.get_or_init(|| vec![Box::new(ecb_provider), Box::new(floating_provider)]);
+
+        let from = Date::from_calendar_date(2024, November, 12).unwrap();
+        let result =
+            historical_rates_of_with("EUR", from, from.add(Duration::days(3 as i64)), || {
+                MOCK_PROVIDERS.get().unwrap()
+            });
+
+        assert_eq!(result.len(), 4);
+        // assert_eq!(result.base, "EUR");
+        // assert_eq!(result.rates.len(), 3);
+        // assert_eq!(result.rates.get("USD"), Some(&1.1)); // ECB rate
+        // assert_eq!(result.rates.get("GBP"), Some(&0.85));
+        // assert_eq!(result.rates.get("JPY"), Some(&130.0));
+    }
+}

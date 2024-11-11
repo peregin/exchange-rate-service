@@ -2,8 +2,7 @@ use crate::route::model::ExchangeRate;
 use crate::service::provider::{historical_rates_of, rates_of, symbols};
 use actix_web::rt::task::spawn_blocking;
 use actix_web::{get, web, HttpResponse, Responder};
-use chrono::{DateTime, Utc};
-use std::arch::x86_64::_mm_add_pd;
+use time::{Duration, OffsetDateTime};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -47,8 +46,9 @@ async fn currencies() -> impl Responder {
 #[get("/api/rates/historical/{base}")]
 async fn historical_rates(params: web::Path<String>) -> HttpResponse {
     let base = params.into_inner().to_uppercase();
-    let now: DateTime<Utc> = Utc::now();
-    let last_month: DateTime<Utc> = now - chrono::Duration::days(30);
+    //let now: DateTime<Utc> = Utc::now();
+    let now = OffsetDateTime::now_utc().date();
+    let last_month  = now - Duration::days(30);
     let series = spawn_blocking(move || {
         // map keys can be String only!!! convert Date to String
         historical_rates_of(base.to_uppercase(), last_month, now)

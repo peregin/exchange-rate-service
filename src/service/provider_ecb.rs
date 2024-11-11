@@ -1,6 +1,5 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::RateProvider;
-use chrono::{DateTime, Utc};
 use log::info;
 use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
@@ -36,8 +35,6 @@ impl EcbRateProvider {
     }
 }
 
-const ISO_FORMAT: &'static str = "%Y-%m-%d";
-
 impl RateProvider for EcbRateProvider {
     fn provider_name(&self) -> &'static str {
         "European Central Bank"
@@ -58,14 +55,14 @@ impl RateProvider for EcbRateProvider {
     fn historical(
         &self,
         base: &str,
-        from: &DateTime<Utc>,
-        to: &DateTime<Utc>,
+        from: &Date,
+        to: &Date,
     ) -> HashMap<Date, ExchangeRate> {
-        let iso_from = from.format(ISO_FORMAT).to_string();
-        let iso_to = to.format(ISO_FORMAT).to_string();
+        let format = Iso8601::DATE;
+        let iso_from = from.format(&format).unwrap();
+        let iso_to = to.format(&format).unwrap();
         let reply = self.retrieve(&format!("{}..{}?from={}", iso_from, iso_to, base));
 
-        let format = Iso8601::DATE;
         let rate_history: EcbRateHistory = reply.json::<EcbRateHistory>().unwrap();
         //println!("rate_history={:#?}", rate_history);
         rate_history.rates.into_iter()

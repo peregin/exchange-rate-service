@@ -1,9 +1,10 @@
-use actix_web::{get, HttpRequest, Responder, web};
-use build_time::build_time_local;
-use chrono::{DateTime, Utc};
+use actix_web::{get, web, HttpRequest, Responder};
+use build_timestamp::build_time;
+use humansize::{format_size, DECIMAL};
 use std::env;
-use humansize::{DECIMAL, format_size};
 use sysinfo::System;
+use time::macros::format_description;
+use time::{OffsetDateTime, PrimitiveDateTime};
 
 #[get("/favicon.ico")]
 pub async fn favicon() -> actix_web::Result<actix_files::NamedFile> {
@@ -12,9 +13,20 @@ pub async fn favicon() -> actix_web::Result<actix_files::NamedFile> {
 
 #[get("/")]
 pub async fn welcome(_: HttpRequest) -> impl Responder {
-    let now: DateTime<Utc> = Utc::now();
-    // Returns the local build timestamp in the specified format.
-    let local_build_time = build_time_local!("%Y-%m-%dT%H:%M:%S%.f%:z");
+    let now = OffsetDateTime::now_utc()
+        .format(&time::format_description::well_known::Rfc2822)
+        .unwrap();
+    // generates a timestamp in const BUILD_TIME as string slice
+    build_time!("%Y-%m-%d %H:%M:%S");
+    println!("BUILD_TIME: {}", BUILD_TIME);
+    let built = PrimitiveDateTime::parse(
+        "2024-11-11 20:12:28",
+        format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
+    )
+    .unwrap()
+    .assume_utc()
+    .format(&time::format_description::well_known::Rfc2822)
+    .unwrap();
     // memory info
     let mut sys = System::new_all();
     sys.refresh_all();
@@ -38,14 +50,14 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
         </body>
     "#,
         now,
-        local_build_time,
+        built,
         env::consts::OS,
         env::consts::ARCH,
         format_size(sys.used_memory(), DECIMAL),
         format_size(sys.total_memory(), DECIMAL),
     )
-        .customize()
-        .insert_header(("content-type", "text/html; charset=utf-8"))
+    .customize()
+    .insert_header(("content-type", "text/html; charset=utf-8"))
 }
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
