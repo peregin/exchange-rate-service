@@ -1,10 +1,12 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::RateProvider;
-use reqwest::blocking::{Client, Response};
-use std::collections::HashMap;
+use futures::{stream, StreamExt};
+use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
-use time::Date;
+use std::collections::HashMap;
+use futures_executor::block_on;
 use time::format_description::well_known::Iso8601;
+use time::Date;
 
 pub struct FreeRateProvider;
 
@@ -25,38 +27,56 @@ impl FreeRateProvider {
         FreeRateProvider
     }
 
-    fn retrieve(&self, path: &str) -> Response {
+    async fn retrieve(&self, path: &str) -> Response {
         let client = Client::new();
         client
             .get(format!("{}@{}", FreeRateProvider::HOST, path))
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")
             .send()
+            .await
             .unwrap()
     }
 
-    fn rates_from(
-        &self,
-        base: &str,
-        at: &Date,
-    ) -> ExchangeRate {
+    async fn rates_from(&self, base: &str, at: &Date) -> ExchangeRate {
         let format = Iso8601::DATE;
         let iso_at = at.format(&format).unwrap();
         let key = base.to_lowercase();
-        let reply = self.retrieve(&format!("{}/v1/currencies/{}.json", iso_at, key));
+        let reply = self
+            .retrieve(&format!("{}/v1/currencies/{}.json", iso_at, key))
+            .await;
         // get json hashmap, where the name is variable
-        let base_rate = reply.json::<FreeRateEntry>().unwrap();
+        let base_rate = reply.json::<FreeRateEntry>().await.unwrap();
         let empty_rates = HashMap::new();
         let rates = base_rate.currencies.get(&key).unwrap_or(&empty_rates);
         ExchangeRate {
             base: base.to_string(),
             // keep KES and BDT
-            rates: rates.iter().filter(|(k, _v)| {
-                k == &"kes" || k == &"bdt"
-            }).map(|(k, v)| {
-                (k.to_uppercase(), *v)
-            }).collect(),
+            rates: rates
+                .iter()
+                .filter(|(k, _v)| k == &"kes" || k == &"bdt")
+                .map(|(k, v)| (k.to_uppercase(), *v))
+                .collect(),
         }
+    }
+
+    async fn rates_between(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
+        // create a vec of dates from to
+        let mut dates = Vec::new();
+        let mut current = *from;
+        while current <= *to {
+            dates.push(current);
+            current = current.next_day().unwrap();
+        }
+
+        stream::iter(dates)
+            .map(|day| async move {
+                let rate = self.rates_from(base, &day).await;
+                (day, rate)
+            })
+            .buffer_unordered(10) // Process up to 10 requests concurrently
+            .collect()
+            .await
     }
 }
 
@@ -73,19 +93,7 @@ impl RateProvider for FreeRateProvider {
         HashMap::new()
     }
 
-    fn historical(
-        &self,
-        base: &str,
-        from: &Date,
-        to: &Date,
-    ) -> HashMap<Date, ExchangeRate> {
-        // iterate from to dates
-        let mut rates = HashMap::new();
-        let mut at = *from;
-        while at <= *to {
-            rates.insert(at, self.rates_from(base, &at));
-            at = at.next_day().unwrap();
-        }
-        rates
+    fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
+        block_on(self.rates_between(base, from, to))
     }
 }
