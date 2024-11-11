@@ -1,3 +1,4 @@
 pub mod provider;
-pub mod provider_float;
-pub mod provider_ecb;
+mod provider_float;
+mod provider_ecb;
+mod provider_free;

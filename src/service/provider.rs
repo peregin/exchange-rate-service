@@ -7,6 +7,7 @@ use time::Date;
 use crate::route::model::ExchangeRate;
 use crate::service::provider_ecb::EcbRateProvider;
 use crate::service::provider_float::FloatRateProvider;
+use crate::service::provider_free::FreeRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
 pub trait RateProvider: Sync + Send {
@@ -29,6 +30,7 @@ fn get_providers() -> &'static Providers {
         let providers: Providers = vec![
             Box::new(EcbRateProvider::new()),
             Box::new(FloatRateProvider::new()),
+            Box::new(FreeRateProvider::new()),
         ];
         info!(
             "providers: {:?}",
