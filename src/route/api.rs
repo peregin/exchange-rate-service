@@ -1,14 +1,10 @@
 use crate::route::model::ExchangeRate;
-use crate::service::provider::{historical_rates_of, rates_of, symbols, RateProvider};
-use crate::service::provider_ecb::EcbRateProvider;
-use crate::service::provider_float::FloatRateProvider;
+use crate::service::provider::{historical_rates_of, rates_of, symbols};
 use actix_web::rt::task::spawn_blocking;
 use actix_web::{get, web, HttpResponse, Responder};
 use chrono::{DateTime, Utc};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-
-type Providers = Vec<Box<dyn RateProvider>>;
 
 #[utoipa::path(
     get,
@@ -20,10 +16,9 @@ type Providers = Vec<Box<dyn RateProvider>>;
     )
 )]
 #[get("/api/rates/currencies")]
-async fn currencies(data: web::Data<Providers>) -> impl Responder {
+async fn currencies() -> impl Responder {
     spawn_blocking(move || {
-        // TODO: don't pass the list of providers here - caching will be done on provider level anyway
-        let pairs = symbols(data.get_ref());
+        let pairs = symbols();
         let sorted = pairs.iter().map(|(k, v)| (k.to_uppercase(), v.clone())).collect::<std::collections::BTreeMap<_, _>>();
         web::Json(sorted)
     }).await.unwrap()
@@ -129,14 +124,6 @@ async fn historical_rates(params: web::Path<String>) -> HttpResponse {
 struct ApiDoc;
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
-    // have the providers as application data or state,
-    // initialize once, with Box put it on the heap
-    let providers: Providers = vec![
-        Box::new(EcbRateProvider::new()),
-        Box::new(FloatRateProvider::new()),
-    ];
-    config.app_data(web::Data::new(providers));
-
     config.service(currencies);
     config.service(rates);
     config.service(rate);

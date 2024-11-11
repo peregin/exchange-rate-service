@@ -1,6 +1,8 @@
 use cached::proc_macro::cached;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
+use std::sync::LazyLock;
+use log::info;
 use time::Date;
 
 use crate::route::model::ExchangeRate;
@@ -8,7 +10,7 @@ use crate::service::provider_ecb::EcbRateProvider;
 use crate::service::provider_float::FloatRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
-pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
+pub trait RateProvider: Sync + Send {
     fn provider_name(&self) -> &'static str;
 
     fn latest(&self, base: &str) -> ExchangeRate;
@@ -24,6 +26,20 @@ pub trait RateProvider: Sync + Send /*+ Hash + Eq*/ {
     ) -> HashMap<Date, ExchangeRate>;
 }
 
+type Providers = Vec<Box<dyn RateProvider>>;
+
+fn get_providers() -> &'static Providers {
+    static PROVIDERS: LazyLock<Providers, fn() -> Providers> = LazyLock::new(|| {
+        let providers: Providers = vec![
+            Box::new(EcbRateProvider::new()),
+            Box::new(FloatRateProvider::new()),
+        ];
+        info!("providers: {:?}", providers.iter().map(|p| p.provider_name()).collect::<Vec<&str>>());
+        providers
+    });
+    &PROVIDERS
+}
+
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
     let ecb = EcbRateProvider::new().latest(&base);
@@ -33,11 +49,9 @@ pub fn rates_of(base: String) -> ExchangeRate {
 }
 
 // map of ISO3 code -> description
-// TODO: to make it cacheable
-// use caching on individual providers - level
-// #[cached(time = 3600)]
-pub fn symbols(providers: &[Box<dyn RateProvider>]) -> HashMap<String, String> {
-    providers
+#[cached(time = 3600)]
+pub fn symbols() -> HashMap<String, String> {
+    get_providers()
         .iter()
         .flat_map(|p| p.symbols().into_iter())
         .collect()
