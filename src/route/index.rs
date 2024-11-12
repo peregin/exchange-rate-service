@@ -18,7 +18,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
         .unwrap();
     // generates a timestamp in const BUILD_TIME as string slice
     build_time!("%Y-%m-%d %H:%M:%S");
-    println!("BUILD_TIME: {}", BUILD_TIME);
+    // println!("BUILD_TIME: {}", BUILD_TIME);
     let built = PrimitiveDateTime::parse(
         "2024-11-11 20:12:28",
         format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),

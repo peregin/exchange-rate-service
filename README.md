@@ -154,6 +154,8 @@ cargo update actix-web --precise 4.5.1
 cargo clean
 # dependency tree
 cargo tree
+# remove unused dependencies
+cargo install cargo-machete && cargo machete
 cargo fix
 cargo build --release
 cargo install --color=always --force cargo-expand
