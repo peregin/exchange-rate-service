@@ -156,10 +156,16 @@ cargo clean
 cargo tree
 # remove unused dependencies
 cargo install cargo-machete && cargo machete
+# disable unused features
+cargo install cargo-features-manager
+cargo features prune
 cargo fix
 cargo build --release
 cargo install --color=always --force cargo-expand
 ```
+
+Tips for speeding up builds
+https://corrode.dev/blog/tips-for-faster-rust-compile-times/
 
 ## Learn Rust
 - https://www.rust-lang.org/
