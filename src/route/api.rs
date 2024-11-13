@@ -167,6 +167,7 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
         description = "Rates API description",
         version = "1.0.0",
         contact(name = "peregin.com", email = "hello@peregin.com"),
+        license(name = "MIT", url = "https://opensource.org/license/mit")
     ),
     paths(
         currencies,
