@@ -1,3 +1,4 @@
+use std::io::Write;
 mod route;
 mod service;
 
@@ -11,12 +12,23 @@ use actix_web::dev::ServiceResponse;
 use actix_web::http::header::HeaderValue;
 use actix_web::http::StatusCode;
 use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
+use time::OffsetDateTime;
+
+const NA: &'static str = "n/a";
 
 // TODO: use async all the way down -> then caching sort out differently
 // TODO: don't use unwrap
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init();
+    env_logger::builder().format(|buf, record| {
+        writeln!(
+            buf,
+            "[{}] {}: {}",
+            OffsetDateTime::now_utc().format(&time::format_description::well_known::Rfc3339).unwrap_or(NA.to_string()),
+            record.level(),
+            record.args()
+        )
+    }).init();
     let port = option_env!("SERVICE_PORT").unwrap_or("9012");
     info!("starting exchange service on port {port} ...");
 

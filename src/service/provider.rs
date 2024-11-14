@@ -69,6 +69,7 @@ pub fn symbols() -> HashMap<String, String> {
 
 #[cached(time = 3600)]
 pub fn historical_rates_of(base: String, from: Date, to: Date) -> HashMap<Date, ExchangeRate> {
+    info!("historical_rates_of: {} {} {}", base, from, to);
     historical_rates_of_with(&base, from, to, get_providers)
 }
 
