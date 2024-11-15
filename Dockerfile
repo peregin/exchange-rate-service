@@ -9,18 +9,17 @@ ENV RUST_VERSION=1.82.0 \
     CARGO_NET_GIT_FETCH_WITH_CLI=true \
     CARGO_BUILD_JOBS=4
 
-RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl
-RUN rustup-init --profile minimal --default-toolchain $RUST_VERSION -y
-RUN rustup update
-
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    "${USER}"
+RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl && \
+    rustup-init --profile minimal --default-toolchain $RUST_VERSION -y && \
+    rustup update && \
+    adduser \
+        --disabled-password \
+        --gecos "" \
+        --home "/nonexistent" \
+        --shell "/sbin/nologin" \
+        --no-create-home \
+        --uid "${UID}" \
+        "${USER}"
 
 WORKDIR /rates
 
