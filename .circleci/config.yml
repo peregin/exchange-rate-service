@@ -3,11 +3,15 @@ version: 2.1
 defaults:
   working_directory: ~/project
 
+executors:
+  ci:
+    docker:
+      - image: cimg/base:2024.11
+
 jobs:
   deploy_rates-backend:
-    docker:
-      - image: cimg/base:2024.09
-    resource_class: medium
+    executor: ci
+    resource_class: arm.medium
     steps:
       - checkout
       - setup_remote_docker:
@@ -20,8 +24,7 @@ jobs:
           command: ./deploy.sh
 
   restart_stack:
-    docker:
-      - image: cimg/base:2024.09
+    executor: ci
     resource_class: small
     steps:
       - add_ssh_keys:

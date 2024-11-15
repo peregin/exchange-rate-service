@@ -10,7 +10,7 @@ ENV RUST_VERSION=1.82.0 \
     CARGO_BUILD_JOBS=4
 
 RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl
-RUN rustup-init --profile default --default-toolchain $RUST_VERSION -y
+RUN rustup-init --profile minimal --default-toolchain $RUST_VERSION -y
 RUN rustup update
 
 RUN adduser \
@@ -26,17 +26,13 @@ WORKDIR /rates
 
 # Copy source code and build
 COPY ./ .
-RUN cargo build --release
+RUN cargo build --release && \
+    strip target/release/exchange-rate-service
 
 ####################################################################################################
 ## Final image
 ####################################################################################################
 FROM debian:bookworm-20240722-slim
-
-RUN apt-get update -y && \
-    apt-get dist-upgrade -y && \
-    apt-get install -y libssl-dev openssl clang ca-certificates && \
-    update-ca-certificates
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd

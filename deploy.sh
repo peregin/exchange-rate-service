@@ -3,13 +3,7 @@
 set -e
 
 # docker build triggers a production install with cargo
-
-# x86_64
-########
-#docker build -t peregin/velocorner.rates .
-#docker push peregin/velocorner.rates:latest
-
-# aarch64
+# build for ARM only, otherwise CI takes too much time
 #########
 # Check if multi-arch-builder exists
 if docker buildx inspect multi-arch-builder &> /dev/null; then
@@ -19,11 +13,7 @@ else
     docker buildx create --name multi-arch-builder
 fi
 docker buildx use multi-arch-builder
-docker buildx build --platform linux/amd64,linux/arm64 -t peregin/velocorner.rates:latest --push .
-
-# test the image if needed
-#docker buildx build --platform linux/amd64 -t peregin/velocorner.rates:latest --load .
-#docker run --rm -it -p 9012:9012 peregin/velocorner.rates
+docker buildx build --platform linux/arm64 -t peregin/velocorner.rates:latest --push .
 
 echo "Successfully deployed..."
 
