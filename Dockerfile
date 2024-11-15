@@ -1,16 +1,17 @@
-# builder layer
+# Builder layer
 FROM alpine:3.20 AS builder
 
-ENV RUST_VERSION=1.82.0
-ENV PATH=$PATH:/root/.cargo/bin
+# Create upp user and setup Rust
+ENV RUST_VERSION=1.82.0 \
+    PATH=$PATH:/root/.cargo/bin \
+    USER=rates \
+    UID=10001 \
+    CARGO_NET_GIT_FETCH_WITH_CLI=true \
+    CARGO_BUILD_JOBS=4
 
 RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl
-RUN rustup-init --profile default --default-toolchain $RUST_VERSION -y -t "$(uname -m)-unknown-linux-musl"
+RUN rustup-init --profile default --default-toolchain $RUST_VERSION -y
 RUN rustup update
-
-# Create appuser
-ENV USER=rates
-ENV UID=10001
 
 RUN adduser \
     --disabled-password \
@@ -21,18 +22,15 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 
-
 WORKDIR /rates
 
+# Copy source code and build
 COPY ./ .
-
-# We no longer need to use the x86_64-unknown-linux-musl target
 RUN cargo build --release
 
 ####################################################################################################
 ## Final image
 ####################################################################################################
-#FROM debian:bookworm-slim - security issue
 FROM debian:bookworm-20240722-slim
 
 RUN apt-get update -y && \
@@ -50,13 +48,12 @@ WORKDIR /rates
 COPY --from=builder /rates/target/release/exchange-rate-service ./
 COPY --from=builder /rates/static ./static/
 
+# enable logging with env_logger and display capturing stacktrace via backtrace
+ENV RUST_LOG=info \
+    RUST_BACKTRACE=1
+
 # Use an unprivileged user.
 USER rates:rates
-
-# enable logging with env_logger
-ENV RUST_LOG=info
-# display capturing stacktrace via backtrace
-ENV RUST_BACKTRACE=1
 
 EXPOSE 9012
 

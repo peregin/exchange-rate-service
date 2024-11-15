@@ -48,13 +48,12 @@ Data sources and characteristics.
 | https://exchangeratesapi.io     | ✅        | ✅    | ✅ timeseries | 250/mo     | multiple    |
 | https://currency.getgeoapi.com/ | ✅        | ✅    | ✅            | 100 / day  | multiple    |
 | https://rapidapi.com            | ✅        | ✅    | ⛔️           | 1000 / day | multiple    |
-| https://p.rapidapi.com          | ✅        | ✅    | ✅ timeseries | 1000 / mo  | multiple    |
 | https://www.abstractapi.com/    | ⛔️       | ⛔️   | ✅            | ⛔️ 500     | multiple    |
 | https://twelvedata.com/         | ✅        | ✅    | ✅ timeseries | 800 / day  | multiple    |
 | https://data.ecb.europa.eu/     | ⛔️       | ✅    | ⛔️           | ?          | ECB         |
 | https://www.centralbank.go.ke/  | ✅        | ✅    | ✅            | ?          | CBK         |
 | https://currencybeacon.com/     | ✅        | ✅    | ✅ timeseries | 5000 / mo  | multiple    |
-| fawazahmed0/exchange-api        | ✅        | ✅    | ✅            | no         | unknown     |
+| ☑️ fawazahmed0/exchange-api     | ✅        | ✅    | ✅            | no         | unknown     |
 | ☑️ https://www.floatrates.com/  | ⚙️KES?   | ✅    | ✅            | no         | CB multiple |
 
 ### KES
@@ -124,9 +123,11 @@ curl -s https://api.frankfurter.app/currencies | jq .
 
 # Docker
 ```shell
+# plain
 docker build -t peregin/velocorner.rates .
+# buildx
+docker buildx build --platform linux/amd64 -t peregin/velocorner.rates:latest --cache-from "type=registry,ref=peregin/velocorner.rates:latest" --cache-to "type=inline" --load .
 docker run --rm -it -p 9012:9012 peregin/velocorner.rates
-docker push peregin/velocorner.rates:latest
 ```
 
 # Rust

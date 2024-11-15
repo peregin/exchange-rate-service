@@ -22,6 +22,7 @@ docker buildx use multi-arch-builder
 docker buildx build --platform linux/amd64,linux/arm64 -t peregin/velocorner.rates:latest --push .
 
 # test the image if needed
+#docker buildx build --platform linux/amd64 -t peregin/velocorner.rates:latest --load .
 #docker run --rm -it -p 9012:9012 peregin/velocorner.rates
 
 echo "Successfully deployed..."

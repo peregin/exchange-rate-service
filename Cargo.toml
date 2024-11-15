@@ -8,7 +8,8 @@ homepage = "https://velocorner.com"
 keywords = ["exchange", "rates", "fx", "hostorical"]
 
 [dependencies]
-actix-web = { version = "4.9.0", features = ["macros"], default-features = false }
+# updating to 4.9.0 pulls in extreme amount of deps and the docker image generation will take almost 2 hours
+actix-web = { version = "4.6.0", features = ["macros"], default-features = false }
 actix-files = "*"
 actix-cors = "0.7.0"
 reqwest = { version = "0.12.9", features = ["blocking", "json", "native-tls"], default-features = false }
