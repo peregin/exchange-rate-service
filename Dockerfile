@@ -9,6 +9,7 @@ ENV RUST_VERSION=1.82.0 \
     CARGO_NET_GIT_FETCH_WITH_CLI=true \
     CARGO_BUILD_JOBS=4
 
+RUN update-ca-certificates
 RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl
 RUN rustup-init --profile minimal --default-toolchain $RUST_VERSION -y
 RUN rustup update
