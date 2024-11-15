@@ -9,7 +9,6 @@ ENV RUST_VERSION=1.82.0 \
     CARGO_NET_GIT_FETCH_WITH_CLI=true \
     CARGO_BUILD_JOBS=4
 
-RUN update-ca-certificates
 RUN apk --no-cache add musl-dev openssl-dev openssl-libs-static openssl rustup clang lld curl
 RUN rustup-init --profile minimal --default-toolchain $RUST_VERSION -y
 RUN rustup update
@@ -34,6 +33,14 @@ RUN cargo build --release && \
 ## Final image
 ####################################################################################################
 FROM debian:bookworm-20240722-slim
+
+RUN apt-get update -y && \
+    apt-get dist-upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    libssl-dev openssl clang ca-certificates && \
+    update-ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
