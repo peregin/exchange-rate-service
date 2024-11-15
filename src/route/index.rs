@@ -23,10 +23,15 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
         "2024-11-11 20:12:28",
         format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
     )
-    .unwrap()
-    .assume_utc()
-    .format(&time::format_description::well_known::Rfc2822)
-    .unwrap();
+        .unwrap()
+        .assume_utc()
+        .format(&time::format_description::well_known::Rfc2822)
+        .unwrap();
+    // calculate uptime
+    let uptime = std::time::SystemTime::now()
+        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
     // memory info
     let mut sys = System::new_all();
     sys.refresh_all();
@@ -44,6 +49,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
             <h1>Welcome to Exchange Rate Service 🚀🪙</h1>
             Current time is <i>{}</i><br/>
             Build time is <i>{}</i><br/>
+            Uptime is <i>{}</i><br/>
             OS type is <i>{} {}</i><br/>
             Used/total memory <i>{} / {}</i><br/>
             Open API <a href="/docs/">/docs</a><br/>
@@ -51,13 +57,14 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
     "#,
         now,
         built,
+        format!("{:02}:{:02}:{:02}", uptime / 3600, (uptime % 3600) / 60, uptime % 60),
         env::consts::OS,
         env::consts::ARCH,
         format_size(sys.used_memory(), DECIMAL),
         format_size(sys.total_memory(), DECIMAL),
     )
-    .customize()
-    .insert_header(("content-type", "text/html; charset=utf-8"))
+        .customize()
+        .insert_header(("content-type", "text/html; charset=utf-8"))
 }
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
