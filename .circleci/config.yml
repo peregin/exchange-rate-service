@@ -48,7 +48,7 @@ jobs:
     executor: ci
     resource_class: small
     steps:
-      - restart-service:
+      - restart_service:
           service_name: rates
 
 workflows:
