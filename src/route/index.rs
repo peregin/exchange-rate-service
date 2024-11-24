@@ -1,3 +1,4 @@
+use crate::service::provider::count_providers;
 use actix_web::{get, web, HttpRequest, Responder};
 use build_timestamp::build_time;
 use humansize::{format_size, DECIMAL};
@@ -47,11 +48,12 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
         </head>
         <body>
             <h1>Welcome to Exchange Rate Service 🚀🪙</h1>
-            Current time is <i>{}</i><br/>
-            Build time is <i>{}</i><br/>
-            Uptime is <i>{}</i><br/>
-            OS type is <i>{} {}</i><br/>
-            Used/total memory <i>{} / {}</i><br/>
+            Current time: <i>{}</i><br/>
+            Build time: <i>{}</i><br/>
+            Uptime: <i>{}</i><br/>
+            OS type: <i>{} {}</i><br/>
+            Used/total memory: <i>{} / {}</i><br/>
+            Providers: <i>{}</i><br/>
             Open API <a href="/docs/">/docs</a><br/>
         </body>
     "#,
@@ -62,6 +64,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
         env::consts::ARCH,
         format_size(sys.used_memory(), DECIMAL),
         format_size(sys.total_memory(), DECIMAL),
+        count_providers(),
     )
         .customize()
         .insert_header(("content-type", "text/html; charset=utf-8"))

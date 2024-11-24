@@ -44,6 +44,11 @@ fn get_providers() -> &'static Providers {
     &PROVIDERS
 }
 
+#[cached(time = 86400)]
+pub fn count_providers() -> usize {
+    get_providers().len()
+}
+
 #[cached(time = 3600)]
 pub fn rates_of(base: String) -> ExchangeRate {
     rates_of_with(&base, get_providers)

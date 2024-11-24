@@ -36,9 +36,11 @@ workflows:
   ci_cd:
     jobs:
       - deploy_rates-backend:
+          context: peregin
           filters:
             branches:
-              only: /master.*/
+              only: /^master.*/
       - restart_stack:
+          context: peregin
           requires:
             - deploy_rates-backend
