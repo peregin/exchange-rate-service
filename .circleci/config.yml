@@ -6,7 +6,28 @@ defaults:
 executors:
   ci:
     docker:
-      - image: cimg/base:2024.11
+      - image: cimg/base:2024.11-slim
+
+commands:
+  restart_service:
+    parameters:
+      service_name:
+        type: string
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:0JgoOo+PO4Mp19b3ZkJ7BfWmo8dzLFS+e6ryCmJ2u1s"
+      - run:
+          name: restart << parameters.service_name >> service
+          command: |
+            ssh -o StrictHostKeyChecking=accept-new \
+                -o BatchMode=yes \
+                -o ConnectTimeout=10 \
+                -o ServerAliveInterval=60 \
+                -o ServerAliveCountMax=3 \
+                -o UserKnownHostsFile=/dev/null \
+                "$DEPLOYER_USER"@velocorner.com "/opt/velocorner/service-update.sh << parameters.service_name >>"
+          no_output_timeout: 5m
 
 jobs:
   deploy_rates-backend:
@@ -27,10 +48,8 @@ jobs:
     executor: ci
     resource_class: small
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "SHA256:0JgoOo+PO4Mp19b3ZkJ7BfWmo8dzLFS+e6ryCmJ2u1s"
-      - run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$DEPLOYER_USER"@velocorner.com '/opt/velocorner/service-update.sh rates'
+      - restart-service:
+          service_name: rates
 
 workflows:
   ci_cd:
