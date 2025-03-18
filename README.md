@@ -38,23 +38,23 @@ Currencies supported in the CO-OPERAID online tool and velocorner.com product se
 ## Data Sources
 Data sources and characteristics.
 
-| Site                            | KES, BDT  | Free | Historical   | Quota      | Source      |
-|---------------------------------|-----------|------|--------------|------------|-------------|
-| ☑️ https://www.frankfurter.app/ | ⛔️        | ✅    | ✅ timeseries | no         | ECB         |
-| https://exchangerate.host       | ✅         | ✅    | ✅            | 100/mo     | multiple    | 
-| https://exchangerate-api.com    | ✅         | ✅    | ⛔️ paid      | 1500/mo    | 30+         | 
-| https://currencyapi.com         | ✅         | ✅    | ✅            | 300/mo     | multiple    |
-| https://openexchangerates.org   | ✅         | ✅    | ✅ timeseries | 1000/mo    | multiple    |
-| https://exchangeratesapi.io     | ✅         | ✅    | ✅ timeseries | 250/mo     | multiple    |
-| https://currency.getgeoapi.com/ | ✅         | ✅    | ✅            | 100 / day  | multiple    |
-| https://rapidapi.com            | ✅         | ✅    | ⛔️           | 1000 / day | multiple    |
-| https://www.abstractapi.com/    | ⛔️        | ⛔️   | ✅            | ⛔️ 500     | multiple    |
-| https://twelvedata.com/         | ✅         | ✅    | ✅ timeseries | 800 / day  | multiple    |
-| https://data.ecb.europa.eu/     | ⛔️        | ✅    | ⛔️           | ?          | ECB         |
-| https://www.centralbank.go.ke/  | ✅         | ✅    | ✅            | ?          | CBK         |
-| https://currencybeacon.com/     | ✅         | ✅    | ✅ timeseries | 5000 / mo  | multiple    |
-| ☑️ fawazahmed0/exchange-api     | ⚙️no BDT  | ✅    | ✅            | no         | unknown     |
-| ☑️ https://www.floatrates.com/  | ⚙️no BDT | ✅    | ✅            | no         | CB multiple |
+| Site                            | KES, BDT | LAK, KIP | Free | Historical   | Quota      | Source      |
+|---------------------------------|----------|----------|------|--------------|------------|-------------|
+| ☑️ https://www.frankfurter.app/ | ⛔️       | ⛔️       | ✅    | ✅ timeseries | no         | ECB         |
+| https://exchangerate.host       | ✅        | ⛔️       | ✅    | ✅            | 100/mo     | multiple    | 
+| https://exchangerate-api.com    | ✅        | ⛔️       | ✅    | ⛔️ paid      | 1500/mo    | 30+         | 
+| https://currencyapi.com         | ✅        | ⛔️       | ✅    | ✅            | 300/mo     | multiple    |
+| https://openexchangerates.org   | ✅        | ⛔️       | ✅    | ✅ timeseries | 1000/mo    | multiple    |
+| https://exchangeratesapi.io     | ✅        | ⛔️       | ✅    | ✅ timeseries | 250/mo     | multiple    |
+| https://currency.getgeoapi.com/ | ✅        | ⛔️       | ✅    | ✅            | 100 / day  | multiple    |
+| https://rapidapi.com            | ✅        | ⛔️       | ✅    | ⛔️           | 1000 / day | multiple    |
+| https://www.abstractapi.com/    | ⛔️       | ⛔️       | ⛔️   | ✅            | ⛔️ 500     | multiple    |
+| https://twelvedata.com/         | ✅        | ⛔️       | ✅    | ✅ timeseries | 800 / day  | multiple    |
+| https://data.ecb.europa.eu/     | ⛔️       | ⛔️       | ✅    | ⛔️           | ?          | ECB         |
+| https://www.centralbank.go.ke/  | ✅        | ⛔️       | ✅    | ✅            | ?          | CBK         |
+| https://currencybeacon.com/     | ✅        | ⛔️       | ✅    | ✅ timeseries | 5000 / mo  | multiple    |
+| ☑️ fawazahmed0/exchange-api     | ✅        | ⛔️       | ✅    | ✅            | no         | unknown     |
+| ☑️ https://www.floatrates.com/  | ✅        | ⛔️       | ✅    | ✅            | no         | CB multiple |
 
 ### KES
 #### Get indicative rates from Central Bank Kenya
