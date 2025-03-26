@@ -164,6 +164,7 @@ cargo fix
 cargo build --release
 cargo install --color=always --force cargo-expand
 # generate bill of materials
+cargo install cargo-sbom
 cargo sbom --output-format=cyclone_dx_json_1_4
 ```
 
