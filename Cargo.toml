@@ -11,16 +11,16 @@ keywords = ["exchange", "rates", "fx", "hostorical"]
 # updating to 4.9.0 pulls in extreme amount of deps and the docker image generation will take almost 2 hours
 actix-web = { version = "4.9.0", features = ["macros"], default-features = false }
 actix-files = "*"
-actix-cors = "0.7.0"
+actix-cors = "0.7.1"
 reqwest = { version = "0.12.12", features = ["blocking", "json", "native-tls"], default-features = false }
 utoipa = { version = "5.3.1", features = ["actix_extras", "time"], default-features = false }
 utoipa-swagger-ui = { version = "9.0.0", features = ["actix-web"], default-features = false } # download with reqwest instead of curl
 serde = { version = "1.0.218", default-features = false }
 serde_json = "1.0.139"
-time = { version = "0.3.37", features = ["macros", "parsing"], default-features = false }
+time = { version = "0.3.41", features = ["macros", "parsing"], default-features = false }
 log = "0.4.26"
 env_logger = { version = "0.11", default-features = false }
-cached = { version = "0.54.0", features = ["proc_macro"], default-features = false } # caching results of functions
+cached = { version = "0.55.1", features = ["proc_macro"], default-features = false } # caching results of functions
 build_timestamp = "0.1.0"
 sysinfo = { version = "0.33.1", features = ["system"], default-features = false }
 humansize = "2.1.3"
