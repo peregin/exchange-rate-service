@@ -2,7 +2,7 @@
 FROM alpine:3.20 AS builder
 
 # Create upp user and setup Rust
-ENV RUST_VERSION=1.82.0 \
+ENV RUST_VERSION=1.89.0 \
     PATH=$PATH:/root/.cargo/bin \
     USER=rates \
     UID=10001 \

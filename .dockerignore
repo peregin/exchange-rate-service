@@ -1,3 +1,29 @@
-target
 .run
 .circleci
+
+# Ignore version control
+.git
+.gitignore
+
+# Rust build artifacts
+target
+Cargo.lock
+
+# IDE/editor files
+*.iml
+*.idea
+*.vscode
+*.swp
+*.swo
+*.DS_Store
+
+# Logs
+*.log
+
+# Node / frontend artifacts (if any)
+node_modules
+dist
+build
+
+# OS junk
+Thumbs.db
