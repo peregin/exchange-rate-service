@@ -29,17 +29,13 @@ RUN cargo build --release && \
     strip target/release/exchange-rate-service
 
 ####################################################################################################
-## Final image
+## Final image (Alpine)
 ####################################################################################################
-FROM debian:bookworm-20240722-slim
+FROM alpine:3.20
 
-RUN apt-get update -y && \
-    apt-get dist-upgrade -y && \
-    apt-get install -y --no-install-recommends \
-    clang ca-certificates && \
-    update-ca-certificates && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Minimal runtime deps
+RUN apk --no-cache add ca-certificates && \
+    update-ca-certificates
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
