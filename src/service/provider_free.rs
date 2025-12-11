@@ -1,10 +1,10 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::RateProvider;
 use futures::{stream, StreamExt};
+use futures_executor::block_on;
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use futures_executor::block_on;
 use time::format_description::well_known::Iso8601;
 use time::Date;
 
@@ -45,10 +45,16 @@ impl FreeRateProvider {
         let reply = self
             .retrieve(&format!("{}/v1/currencies/{}.json", iso_at, key))
             .await;
-        // get json hashmap, where the name is variable
-        let base_rate = reply.json::<FreeRateEntry>().await.unwrap();
+        // get JSON hashmap, where the name is variable
+        let base_rate: FreeRateEntry = reply.json::<FreeRateEntry>().await.unwrap_or_else(|e| {
+            log::error!("Failed to parse FreeRateEntry: {}", e);
+            FreeRateEntry {
+                date: String::new(),
+                currencies: HashMap::new(),
+            }
+        });
         let empty_rates = HashMap::new();
-        let rates = base_rate.currencies.get(&key).unwrap_or(&empty_rates);
+        let rates: &HashMap<String, f32> = base_rate.currencies.get(&key).unwrap_or(&empty_rates);
         ExchangeRate {
             base: base.to_string(),
             // keep KES and BDT
@@ -60,7 +66,12 @@ impl FreeRateProvider {
         }
     }
 
-    async fn rates_between(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
+    async fn rates_between(
+        &self,
+        base: &str,
+        from: &Date,
+        to: &Date,
+    ) -> HashMap<Date, ExchangeRate> {
         // create a vec of dates from to
         let mut dates = Vec::new();
         let mut current = *from;
