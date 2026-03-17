@@ -41,7 +41,7 @@ async fn main() -> std::io::Result<()> {
             });
         App::new()
             .wrap(cors)
-            .wrap(ErrorHandlers::new().handler(http::StatusCode::INTERNAL_SERVER_ERROR, render_500))
+            .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, render_500))
             .configure(route::route::init_routes)
     })
         .bind(format!("0.0.0.0:{port}"))?
