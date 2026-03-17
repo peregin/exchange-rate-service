@@ -4,10 +4,14 @@ use log::info;
 use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 use time::format_description::well_known::Iso8601;
 use time::Date;
 
-pub struct EcbRateProvider;
+pub struct EcbRateProvider {
+}
+
+static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 // internal response
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -21,12 +25,11 @@ impl EcbRateProvider {
     const HOST: &'static str = "https://api.frankfurter.app";
 
     pub fn new() -> Self {
-        EcbRateProvider
+        EcbRateProvider {}
     }
 
     fn retrieve(&self, path: &str) -> Response {
-        let client = Client::new();
-        client
+        HTTP_CLIENT
             .get(format!("{}/{}", EcbRateProvider::HOST, path))
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")

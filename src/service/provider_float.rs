@@ -4,9 +4,13 @@ use log::info;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 use time::Date;
 
-pub struct FloatRateProvider;
+pub struct FloatRateProvider {
+}
+
+static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 // internal response
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -20,12 +24,11 @@ impl FloatRateProvider {
     const HOST: &'static str = "https://www.floatrates.com";
 
     pub fn new() -> Self {
-        FloatRateProvider
+        FloatRateProvider {}
     }
 
     fn retrieve(&self, base: &str) -> Vec<FloatRateEntry> {
-        let client = Client::new();
-        let reply = client
+        let reply = HTTP_CLIENT
             .get(format!(
                 "{}/daily/{}.json",
                 FloatRateProvider::HOST,

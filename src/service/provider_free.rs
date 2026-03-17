@@ -5,10 +5,14 @@ use futures_executor::block_on;
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 use time::format_description::well_known::Iso8601;
 use time::Date;
 
-pub struct FreeRateProvider;
+pub struct FreeRateProvider {
+}
+
+static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 // internal response
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -24,12 +28,11 @@ impl FreeRateProvider {
     const HOST: &'static str = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api";
 
     pub fn new() -> Self {
-        FreeRateProvider
+        FreeRateProvider {}
     }
 
     async fn retrieve(&self, path: &str) -> Response {
-        let client = Client::new();
-        client
+        HTTP_CLIENT
             .get(format!("{}@{}", FreeRateProvider::HOST, path))
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")
