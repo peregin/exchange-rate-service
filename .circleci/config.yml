@@ -6,7 +6,7 @@ defaults:
 executors:
   ci:
     docker:
-      - image: cimg/base:2024.11
+      - image: cimg/base:2026.03
 
 commands:
   restart_service:
