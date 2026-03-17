@@ -4,9 +4,23 @@ use actix_files::NamedFile;
 use build_timestamp::build_time;
 use humansize::{format_size, DECIMAL};
 use std::env;
+use std::sync::LazyLock;
+use std::time::Instant;
 use sysinfo::System;
 use time::macros::format_description;
 use time::{OffsetDateTime, PrimitiveDateTime};
+
+static PROCESS_START: LazyLock<Instant> = LazyLock::new(Instant::now);
+
+fn format_uptime(seconds: u64) -> String {
+    format!(
+        "{}d {:02}:{:02}:{:02}",
+        seconds / 86_400,
+        (seconds % 86_400) / 3_600,
+        (seconds % 3_600) / 60,
+        seconds % 60
+    )
+}
 
 #[get("/favicon.ico")]
 pub async fn favicon(_: HttpRequest) -> actix_web::Result<NamedFile> {
@@ -18,22 +32,16 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
     let now = OffsetDateTime::now_utc()
         .format(&time::format_description::well_known::Rfc2822)
         .unwrap();
-    // generates a timestamp in const BUILD_TIME as string slice
     build_time!("%Y-%m-%d %H:%M:%S");
-    // println!("BUILD_TIME: {}", BUILD_TIME);
     let built = PrimitiveDateTime::parse(
-        "2024-11-11 20:12:28",
+        BUILD_TIME,
         format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
     )
     .unwrap()
     .assume_utc()
     .format(&time::format_description::well_known::Rfc2822)
     .unwrap();
-    // calculate uptime
-    let uptime = std::time::SystemTime::now()
-        .duration_since(std::time::SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+    let uptime = format_uptime(PROCESS_START.elapsed().as_secs());
     // memory info
     let mut sys = System::new_all();
     sys.refresh_all();
@@ -60,12 +68,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
     "#,
         now,
         built,
-        format!(
-            "{:02}:{:02}:{:02}",
-            uptime / 3600,
-            (uptime % 3600) / 60,
-            uptime % 60
-        ),
+        uptime,
         env::consts::OS,
         env::consts::ARCH,
         format_size(sys.used_memory(), DECIMAL),
@@ -145,25 +148,20 @@ mod tests {
         assert_eq!(content_type, "image/x-icon");
     }
 
-    #[test]
-    async fn test_uptime_format() {
-        // Test the uptime formatting logic
+    #[actix_web::test]
+    async fn test_format_uptime() {
         let test_cases = vec![
-            (3600, "01:00:00"),  // 1 hour
-            (3665, "01:01:05"),  // 1 hour, 1 minute, 5 seconds
-            (7200, "02:00:00"),  // 2 hours
-            (86399, "23:59:59"), // 23 hours, 59 minutes, 59 seconds
-            (0, "00:00:00"),     // 0 seconds
+            (3600, "0d 01:00:00"),
+            (3665, "0d 01:01:05"),
+            (7200, "0d 02:00:00"),
+            (86399, "0d 23:59:59"),
+            (86400, "1d 00:00:00"),
+            (90061, "1d 01:01:01"),
+            (0, "0d 00:00:00"),
         ];
 
         for (seconds, expected) in test_cases {
-            let formatted = format!(
-                "{:02}:{:02}:{:02}",
-                seconds / 3600,
-                (seconds % 3600) / 60,
-                seconds % 60
-            );
-            assert_eq!(formatted, expected);
+            assert_eq!(format_uptime(seconds), expected);
         }
     }
 }
