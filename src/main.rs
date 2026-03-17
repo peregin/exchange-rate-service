@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::env;
 mod route;
 mod service;
 
@@ -29,7 +30,7 @@ async fn main() -> std::io::Result<()> {
             record.args()
         )
     }).init();
-    let port = option_env!("SERVICE_PORT").unwrap_or("9012");
+    let port = env::var("SERVICE_PORT").unwrap_or_else(|_| "9012".to_string());
     info!("starting exchange service on port {port} ...");
 
     HttpServer::new(|| {
