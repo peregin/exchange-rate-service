@@ -23,7 +23,7 @@ impl ExchangeRate {
 
     pub fn empty(base: &str) -> ExchangeRate {
         ExchangeRate {
-            base:  base.to_string(),
+            base: base.to_string(),
             rates: HashMap::new(),
         }
     }

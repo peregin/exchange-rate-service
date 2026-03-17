@@ -4,8 +4,8 @@ use log::info;
 use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use time::Date;
 use time::format_description::well_known::Iso8601;
+use time::Date;
 
 pub struct EcbRateProvider;
 
@@ -52,12 +52,7 @@ impl RateProvider for EcbRateProvider {
         reply.json::<HashMap<String, String>>().unwrap()
     }
 
-    fn historical(
-        &self,
-        base: &str,
-        from: &Date,
-        to: &Date,
-    ) -> HashMap<Date, ExchangeRate> {
+    fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
         let format = Iso8601::DATE;
         let iso_from = from.format(&format).unwrap();
         let iso_to = to.format(&format).unwrap();
@@ -65,7 +60,9 @@ impl RateProvider for EcbRateProvider {
 
         let rate_history: EcbRateHistory = reply.json::<EcbRateHistory>().unwrap();
         //println!("rate_history={:#?}", rate_history);
-        rate_history.rates.into_iter()
+        rate_history
+            .rates
+            .into_iter()
             .map(|(date, rates)| {
                 let iso_date = Date::parse(&date, &format).unwrap();
                 let exchange_rate = ExchangeRate {

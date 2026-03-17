@@ -151,9 +151,7 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     let (base, counter) = params.into_inner();
     let base = base.to_uppercase();
     let counter = counter.to_uppercase();
-    let exchanges = spawn_blocking(move || rates_of(base))
-        .await
-        .unwrap();
+    let exchanges = spawn_blocking(move || rates_of(base)).await.unwrap();
     match exchanges.rates.get(&counter) {
         Some(fx) => HttpResponse::Ok().json(fx),
         None => HttpResponse::NotFound().finish(),

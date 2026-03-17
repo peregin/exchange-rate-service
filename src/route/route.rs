@@ -1,5 +1,5 @@
-use crate::route::index;
 use crate::route::api;
+use crate::route::index;
 
 use actix_web::web;
 

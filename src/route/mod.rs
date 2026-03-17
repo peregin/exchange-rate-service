@@ -1,4 +1,4 @@
-pub mod route;
-pub mod model;
-mod index;
 mod api;
+mod index;
+pub mod model;
+pub mod route;

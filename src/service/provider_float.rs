@@ -63,27 +63,22 @@ impl RateProvider for FloatRateProvider {
             .collect()
     }
 
-    fn historical(
-        &self,
-        _base: &str,
-        _from: &Date,
-        _to: &Date,
-    ) -> HashMap<Date, ExchangeRate> {
+    fn historical(&self, _base: &str, _from: &Date, _to: &Date) -> HashMap<Date, ExchangeRate> {
         HashMap::new()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use time::Month::November;
     use super::*;
+    use time::Month::November;
 
     #[test]
     fn test_historical_empty_response() {
         let provider = FloatRateProvider::new(); // Replace with your actual provider struct
         let base = "USD";
         let from = Date::from_calendar_date(2023, time::Month::January, 1).unwrap();
-        let to= Date::from_calendar_date(2024, November, 11).unwrap();
+        let to = Date::from_calendar_date(2024, November, 11).unwrap();
 
         let result = provider.historical(base, &from, &to);
 

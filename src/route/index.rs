@@ -1,6 +1,6 @@
 use crate::service::provider::count_providers;
-use actix_web::{get, web, HttpRequest, Responder};
 use actix_files::NamedFile;
+use actix_web::{get, web, HttpRequest, Responder};
 use build_timestamp::build_time;
 use humansize::{format_size, DECIMAL};
 use std::env;
