@@ -163,10 +163,18 @@ cargo features prune
 cargo fix
 cargo build --release
 cargo install --color=always --force cargo-expand
-# generate bill of materials
+```
+
+#### Generate software bill of materials SBOM
+```shell
+# generate bill of materials with cyclonedx plugin
+cargo install cargo-cyclonedx
+cargo cyclonedx --format json --spec-version 1.5 --override-filename sbom
+# generate bill of materials with cargo-sbom
 cargo install cargo-sbom
 cargo sbom --output-format=cyclone_dx_json_1_4
 ```
+
 
 Tips for speeding up builds
 https://corrode.dev/blog/tips-for-faster-rust-compile-times/
