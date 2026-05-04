@@ -42,6 +42,7 @@ Check historical rates source for UGX, NPR
 
 | Site                            | KES, BDT | LAK, KIP | Free | Historical   | Quota      | Source      |
 |---------------------------------|----------|----------|------|--------------|------------|-------------|
+| ☑️ https://frankfurter.dev/     | ✅        | ✅        | ✅    | ✅ timeseries | no         | ECB         |
 | ☑️ https://www.frankfurter.app/ | ⛔️       | ⛔️       | ✅    | ✅ timeseries | no         | ECB         |
 | https://exchangerate.host       | ✅        | ⛔️       | ✅    | ✅            | 100/mo     | multiple    | 
 | https://exchangerate-api.com    | ✅        | ⛔️       | ✅    | ⛔️ paid      | 1500/mo    | 30+         | 
