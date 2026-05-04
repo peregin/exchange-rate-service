@@ -615,6 +615,7 @@ dependencies = [
  "actix-cors",
  "actix-files",
  "actix-web",
+ "async-trait",
  "build_timestamp",
  "cached",
  "env_logger",

@@ -1,9 +1,8 @@
+use async_trait::async_trait;
 use cached::proc_macro::cached;
 use futures::future::join_all;
 use log::info;
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::LazyLock;
 use time::Date;
 
@@ -13,22 +12,16 @@ use crate::service::provider_frankfurter_v2::FrankfurterV2RateProvider;
 use crate::service::provider_free::FreeRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
-pub type ProviderFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
-
+#[async_trait]
 pub trait RateProvider: Sync + Send {
     fn provider_name(&self) -> &str;
 
-    fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate>;
+    async fn latest(&self, base: &str) -> ExchangeRate;
 
     // iso3 -> description
-    fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>>;
+    async fn symbols(&self) -> HashMap<String, String>;
 
-    fn historical<'a>(
-        &'a self,
-        base: &'a str,
-        from: &'a Date,
-        to: &'a Date,
-    ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>>;
+    async fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate>;
 }
 
 type Providers = Vec<Box<dyn RateProvider>>;
@@ -138,52 +131,49 @@ mod tests {
     }
 
     #[allow(unused_variables)]
+    #[async_trait]
     impl RateProvider for MockProvider {
         fn provider_name(&self) -> &str {
             &self.name
         }
 
-        fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate> {
-            Box::pin(async move {
-                ExchangeRate {
+        async fn latest(&self, base: &str) -> ExchangeRate {
+            ExchangeRate {
+                base: base.to_string(),
+                rates: self.rates.clone(),
+            }
+        }
+
+        async fn symbols(&self) -> HashMap<String, String> {
+            HashMap::new()
+        }
+
+        async fn historical(
+            &self,
+            base: &str,
+            from: &Date,
+            to: &Date,
+        ) -> HashMap<Date, ExchangeRate> {
+            // days between from and to
+            let days = to.to_julian_day() - from.to_julian_day();
+            // iterate between from until to and create ExchangeRate for each day
+            let mut rates = HashMap::new();
+            for i in 0..=days {
+                let date = from.add(Duration::days(i as i64));
+                let exchange_rate = ExchangeRate {
                     base: base.to_string(),
-                    rates: self.rates.clone(),
-                }
-            })
-        }
-
-        fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>> {
-            Box::pin(async { HashMap::new() })
-        }
-
-        fn historical<'a>(
-            &'a self,
-            base: &'a str,
-            from: &'a Date,
-            to: &'a Date,
-        ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>> {
-            Box::pin(async move {
-                // days between from and to
-                let days = to.to_julian_day() - from.to_julian_day();
-                // iterate between from until to and create ExchangeRate for each day
-                let mut rates = HashMap::new();
-                for i in 0..=days {
-                    let date = from.add(Duration::days(i as i64));
-                    let exchange_rate = ExchangeRate {
-                        base: base.to_string(),
-                        // add 1 to each rate to make it different from the base
-                        // and make it easier to test
-                        // 1.1, 1.2, 1.3, ...
-                        rates: self
-                            .rates
-                            .iter()
-                            .map(|(k, v)| (k.clone(), v + i as f32 + 1.0))
-                            .collect(),
-                    };
-                    rates.insert(date, exchange_rate);
-                }
-                rates
-            })
+                    // add 1 to each rate to make it different from the base
+                    // and make it easier to test
+                    // 1.1, 1.2, 1.3, ...
+                    rates: self
+                        .rates
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v + i as f32 + 1.0))
+                        .collect(),
+                };
+                rates.insert(date, exchange_rate);
+            }
+            rates
         }
     }
 

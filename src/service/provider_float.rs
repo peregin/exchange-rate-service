@@ -1,5 +1,6 @@
 use crate::route::model::ExchangeRate;
-use crate::service::provider::{ProviderFuture, RateProvider};
+use crate::service::provider::RateProvider;
+use async_trait::async_trait;
 use log::info;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -47,6 +48,7 @@ impl FloatRateProvider {
     }
 }
 
+#[async_trait]
 impl RateProvider for FloatRateProvider {
     fn provider_name(&self) -> &'static str {
         "floatrates.com"
@@ -54,33 +56,29 @@ impl RateProvider for FloatRateProvider {
 
     // latest exchange rate
 
-    fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate> {
-        Box::pin(async move {
-            let reply = self.retrieve(base).await;
-            ExchangeRate {
-                base: base.to_owned(),
-                rates: reply.into_iter().map(|e| (e.code, e.rate)).collect(),
-            }
-        })
+    async fn latest(&self, base: &str) -> ExchangeRate {
+        let reply = self.retrieve(base).await;
+        ExchangeRate {
+            base: base.to_owned(),
+            rates: reply.into_iter().map(|e| (e.code, e.rate)).collect(),
+        }
     }
 
-    fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>> {
-        Box::pin(async move {
-            self.retrieve("CHF")
-                .await
-                .into_iter()
-                .map(|e| (e.code, e.name))
-                .collect()
-        })
+    async fn symbols(&self) -> HashMap<String, String> {
+        self.retrieve("CHF")
+            .await
+            .into_iter()
+            .map(|e| (e.code, e.name))
+            .collect()
     }
 
-    fn historical<'a>(
-        &'a self,
-        _base: &'a str,
-        _from: &'a Date,
-        _to: &'a Date,
-    ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>> {
-        Box::pin(async { HashMap::new() })
+    async fn historical(
+        &self,
+        _base: &str,
+        _from: &Date,
+        _to: &Date,
+    ) -> HashMap<Date, ExchangeRate> {
+        HashMap::new()
     }
 }
 

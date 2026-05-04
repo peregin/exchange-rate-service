@@ -1,5 +1,6 @@
 use crate::route::model::ExchangeRate;
-use crate::service::provider::{ProviderFuture, RateProvider};
+use crate::service::provider::RateProvider;
+use async_trait::async_trait;
 use log::{error, info};
 use reqwest::Client;
 use serde::de::DeserializeOwned;
@@ -102,49 +103,39 @@ impl FrankfurterV2RateProvider {
     }
 }
 
+#[async_trait]
 impl RateProvider for FrankfurterV2RateProvider {
     fn provider_name(&self) -> &'static str {
         "Frankfurter v2"
     }
 
-    fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate> {
-        Box::pin(async move {
-            let rows = self
-                .retrieve::<Vec<FrankfurterV2RateEntry>>(&format!("rates?base={}", base))
-                .await;
-            info!("base={:#?}, {:#?} Frankfurter v2 rates", base, rows.len());
-            Self::rows_to_exchange_rate(base, rows)
-        })
+    async fn latest(&self, base: &str) -> ExchangeRate {
+        let rows = self
+            .retrieve::<Vec<FrankfurterV2RateEntry>>(&format!("rates?base={}", base))
+            .await;
+        info!("base={:#?}, {:#?} Frankfurter v2 rates", base, rows.len());
+        Self::rows_to_exchange_rate(base, rows)
     }
 
-    fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>> {
-        Box::pin(async move {
-            self.retrieve::<Vec<FrankfurterV2Currency>>("currencies")
-                .await
-                .into_iter()
-                .map(|entry| (entry.iso_code, entry.name))
-                .collect()
-        })
+    async fn symbols(&self) -> HashMap<String, String> {
+        self.retrieve::<Vec<FrankfurterV2Currency>>("currencies")
+            .await
+            .into_iter()
+            .map(|entry| (entry.iso_code, entry.name))
+            .collect()
     }
 
-    fn historical<'a>(
-        &'a self,
-        base: &'a str,
-        from: &'a Date,
-        to: &'a Date,
-    ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>> {
-        Box::pin(async move {
-            let format = Iso8601::DATE;
-            let iso_from = from.format(&format).unwrap();
-            let iso_to = to.format(&format).unwrap();
-            let rows = self
-                .retrieve::<Vec<FrankfurterV2RateEntry>>(&format!(
-                    "rates?base={}&from={}&to={}",
-                    base, iso_from, iso_to
-                ))
-                .await;
-            Self::rows_to_history(base, rows)
-        })
+    async fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
+        let format = Iso8601::DATE;
+        let iso_from = from.format(&format).unwrap();
+        let iso_to = to.format(&format).unwrap();
+        let rows = self
+            .retrieve::<Vec<FrankfurterV2RateEntry>>(&format!(
+                "rates?base={}&from={}&to={}",
+                base, iso_from, iso_to
+            ))
+            .await;
+        Self::rows_to_history(base, rows)
     }
 }
 

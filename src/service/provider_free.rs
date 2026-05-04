@@ -1,5 +1,6 @@
 use crate::route::model::ExchangeRate;
-use crate::service::provider::{ProviderFuture, RateProvider};
+use crate::service::provider::RateProvider;
+use async_trait::async_trait;
 use futures::{stream, StreamExt};
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
@@ -92,25 +93,21 @@ impl FreeRateProvider {
     }
 }
 
+#[async_trait]
 impl RateProvider for FreeRateProvider {
     fn provider_name(&self) -> &'static str {
         "Free Exchange API"
     }
 
-    fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate> {
-        Box::pin(async move { ExchangeRate::empty(base) })
+    async fn latest(&self, base: &str) -> ExchangeRate {
+        ExchangeRate::empty(base)
     }
 
-    fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>> {
-        Box::pin(async { HashMap::new() })
+    async fn symbols(&self) -> HashMap<String, String> {
+        HashMap::new()
     }
 
-    fn historical<'a>(
-        &'a self,
-        base: &'a str,
-        from: &'a Date,
-        to: &'a Date,
-    ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>> {
-        Box::pin(async move { self.rates_between(base, from, to).await })
+    async fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
+        self.rates_between(base, from, to).await
     }
 }
