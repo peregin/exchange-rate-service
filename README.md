@@ -32,11 +32,13 @@ Currencies supported in the CO-OPERAID online tool and velocorner.com product se
 | MZN                    | Mozambican Metical   | MZ           | Mozambique     |
 | MWK                    | Malawian Kwacha      | MW           | Malawi         |
 | UGX                    | Ugandan Shilling     | UG           | Uganda         |
+| NPR                    | Nepalese Rupee       | NP           | Nepal          |
 | USD                    | United States Dollar | US           | United States  |
 
 
 ## Data Sources
 Data sources and characteristics.
+Check historical rates source for UGX, NPR 
 
 | Site                            | KES, BDT | LAK, KIP | Free | Historical   | Quota      | Source      |
 |---------------------------------|----------|----------|------|--------------|------------|-------------|

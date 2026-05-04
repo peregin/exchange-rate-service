@@ -15,7 +15,7 @@ use actix_web::http::StatusCode;
 use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
 use time::OffsetDateTime;
 
-const NA: &'static str = "n/a";
+const NA: &str = "n/a";
 
 // TODO: use async all the way down -> then caching sort out differently
 // TODO: don't use unwrap
