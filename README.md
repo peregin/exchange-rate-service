@@ -43,7 +43,6 @@ Check historical rates source for UGX, NPR
 | Site                            | KES, BDT | LAK, KIP | Free | Historical   | Quota      | Source      |
 |---------------------------------|----------|----------|------|--------------|------------|-------------|
 | ☑️ https://frankfurter.dev/     | ✅        | ✅ no KIP | ✅    | ✅ timeseries | no         | multiple    |
-| ☑️ https://www.frankfurter.app/ | ⛔️       | ⛔️       | ✅    | ✅ timeseries | no         | ECB         |
 | https://exchangerate.host       | ✅        | ⛔️       | ✅    | ✅            | 100/mo     | multiple    | 
 | https://exchangerate-api.com    | ✅        | ⛔️       | ✅    | ⛔️ paid      | 1500/mo    | 30+         | 
 | https://currencyapi.com         | ✅        | ⛔️       | ✅    | ✅            | 300/mo     | multiple    |
@@ -53,7 +52,6 @@ Check historical rates source for UGX, NPR
 | https://rapidapi.com            | ✅        | ⛔️       | ✅    | ⛔️           | 1000 / day | multiple    |
 | https://www.abstractapi.com/    | ⛔️       | ⛔️       | ⛔️   | ✅            | ⛔️ 500     | multiple    |
 | https://twelvedata.com/         | ✅        | ⛔️       | ✅    | ✅ timeseries | 800 / day  | multiple    |
-| https://data.ecb.europa.eu/     | ⛔️       | ⛔️       | ✅    | ⛔️           | ?          | ECB         |
 | https://www.centralbank.go.ke/  | ✅        | ⛔️       | ✅    | ✅            | ?          | CBK         |
 | https://currencybeacon.com/     | ✅        | ⛔️       | ✅    | ✅ timeseries | 5000 / mo  | multiple    |
 | ☑️ fawazahmed0/exchange-api     | ✅        | ⛔️       | ✅    | ✅            | no         | unknown     |
@@ -116,12 +114,6 @@ curl 'https://www.exchange-rates.org/api/v2/rates/lookup?isoTo=BDT&isoFrom=CHF&a
 ```shell
 curl -s https://www.floatrates.com/daily/usd.json | jq .
 curl "https://www.floatrates.com/historical-exchange-rates.html?operation=rates&page=historical&currency_date=2024-03-11&base_currency_code=CHF&format_type=xml"
-```
-
-### European Central Bank Rates
-```shell
-curl -s https://api.frankfurter.app/latest | jq .
-curl -s https://api.frankfurter.app/currencies | jq .
 ```
 
 # Docker
@@ -192,4 +184,3 @@ https://corrode.dev/blog/tips-for-faster-rust-compile-times/
 - https://github.com/mre/idiomatic-rust
 - https://github.com/rust-unofficial/awesome-rust
 - https://github.com/ctjhoa/rust-learning
-

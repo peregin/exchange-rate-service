@@ -8,7 +8,6 @@ use std::sync::LazyLock;
 use time::Date;
 
 use crate::route::model::ExchangeRate;
-use crate::service::provider_ecb::EcbRateProvider;
 use crate::service::provider_float::FloatRateProvider;
 use crate::service::provider_frankfurter_v2::FrankfurterV2RateProvider;
 use crate::service::provider_free::FreeRateProvider;
@@ -37,12 +36,11 @@ type Providers = Vec<Box<dyn RateProvider>>;
 fn get_providers() -> &'static Providers {
     static PROVIDERS: LazyLock<Providers, fn() -> Providers> = LazyLock::new(|| {
         // sequence is important, earlier providers keep priority for the same currencies
-        // ECB rates override float rates, while later providers fill gaps
+        // while later providers fill gaps
         let providers: Providers = vec![
-            Box::new(EcbRateProvider::new()),
+            Box::new(FrankfurterV2RateProvider::new()),
             Box::new(FloatRateProvider::new()),
             Box::new(FreeRateProvider::new()),
-            Box::new(FrankfurterV2RateProvider::new()),
         ];
         info!(
             "providers: {:?}",
@@ -70,7 +68,7 @@ where
     F: Fn() -> &'static Providers,
 {
     let rates = join_all(providers_fn().iter().map(|p| p.latest(base))).await;
-    // merge with priority (ECB rates overrides floating rates)
+    // merge with priority (earlier providers keep priority for the same currencies)
     rates
         .into_iter()
         .fold(ExchangeRate::empty(base), |acc, current| current.chain(acc))
@@ -113,7 +111,7 @@ where
     .await
     .into_iter()
     .flat_map(|rates| rates.into_iter());
-    // merge with priority (ECB rates overrides floating rates)
+    // merge with priority (earlier providers keep priority for the same currencies)
     rates.fold(HashMap::new(), |mut acc, (date, current)| {
         if let Some(existing) = acc.get_mut(&date) {
             *existing = current.chain(existing.clone());
@@ -212,31 +210,32 @@ mod tests {
     #[actix_web::test]
     async fn test_rates_of_multiple_providers_with_priority() {
         // Arrange
-        let mut ecb_rates = HashMap::new();
-        ecb_rates.insert("USD".to_string(), 1.1);
-        ecb_rates.insert("GBP".to_string(), 0.85);
+        let mut primary_rates = HashMap::new();
+        primary_rates.insert("USD".to_string(), 1.1);
+        primary_rates.insert("GBP".to_string(), 0.85);
 
-        let mut floating_rates = HashMap::new();
-        floating_rates.insert("USD".to_string(), 1.2); // Should be overridden by ECB
-        floating_rates.insert("JPY".to_string(), 130.0); // Should be included
+        let mut secondary_rates = HashMap::new();
+        secondary_rates.insert("USD".to_string(), 1.2); // Should be overridden by primary
+        secondary_rates.insert("JPY".to_string(), 130.0); // Should be included
 
-        let ecb_provider = MockProvider {
-            name: "ECB".to_string(),
-            rates: ecb_rates,
+        let primary_provider = MockProvider {
+            name: "Primary".to_string(),
+            rates: primary_rates,
         };
-        let floating_provider = MockProvider {
-            name: "Floating".to_string(),
-            rates: floating_rates,
+        let secondary_provider = MockProvider {
+            name: "Secondary".to_string(),
+            rates: secondary_rates,
         };
         static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS.get_or_init(|| vec![Box::new(ecb_provider), Box::new(floating_provider)]);
+        MOCK_PROVIDERS
+            .get_or_init(|| vec![Box::new(primary_provider), Box::new(secondary_provider)]);
 
         let result = rates_of_with("EUR", || MOCK_PROVIDERS.get().unwrap()).await;
 
         assert_eq!(result.base, "EUR");
         assert_eq!(result.rates.len(), 3);
-        assert_eq!(result.rates.get("USD"), Some(&1.1)); // ECB rate
+        assert_eq!(result.rates.get("USD"), Some(&1.1)); // Primary rate
         assert_eq!(result.rates.get("GBP"), Some(&0.85));
         assert_eq!(result.rates.get("JPY"), Some(&130.0));
     }
@@ -253,25 +252,26 @@ mod tests {
 
     #[actix_web::test]
     async fn test_historical_rates_with_multiple_providers_and_priority() {
-        let mut ecb_rates = HashMap::new();
-        ecb_rates.insert("USD".to_string(), 1.1);
-        ecb_rates.insert("GBP".to_string(), 0.85);
+        let mut primary_rates = HashMap::new();
+        primary_rates.insert("USD".to_string(), 1.1);
+        primary_rates.insert("GBP".to_string(), 0.85);
 
-        let mut floating_rates = HashMap::new();
-        floating_rates.insert("USD".to_string(), 1.2); // Should be overridden by ECB
-        floating_rates.insert("JPY".to_string(), 130.0); // Should be included
+        let mut secondary_rates = HashMap::new();
+        secondary_rates.insert("USD".to_string(), 1.2); // Should be overridden by primary
+        secondary_rates.insert("JPY".to_string(), 130.0); // Should be included
 
-        let ecb_provider = MockProvider {
-            name: "ECB".to_string(),
-            rates: ecb_rates,
+        let primary_provider = MockProvider {
+            name: "Primary".to_string(),
+            rates: primary_rates,
         };
-        let floating_provider = MockProvider {
-            name: "Floating".to_string(),
-            rates: floating_rates,
+        let secondary_provider = MockProvider {
+            name: "Secondary".to_string(),
+            rates: secondary_rates,
         };
         static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS.get_or_init(|| vec![Box::new(ecb_provider), Box::new(floating_provider)]);
+        MOCK_PROVIDERS
+            .get_or_init(|| vec![Box::new(primary_provider), Box::new(secondary_provider)]);
 
         let from = Date::from_calendar_date(2024, November, 12).unwrap();
         let to = from.add(Duration::days(3));
@@ -283,35 +283,36 @@ mod tests {
         let day1 = result.get(&from).unwrap();
         assert_eq!(day1.base, "EUR");
         assert_eq!(day1.rates.len(), 3);
-        assert_eq!(day1.rates.get("USD"), Some(&2.1)); // ECB rate
+        assert_eq!(day1.rates.get("USD"), Some(&2.1)); // Primary rate
         assert_eq!(day1.rates.get("GBP"), Some(&1.85));
         assert_eq!(day1.rates.get("JPY"), Some(&131.0));
         let day4 = result.get(&to).unwrap();
         assert_eq!(day4.base, "EUR");
         assert_eq!(day4.rates.len(), 3);
-        assert_eq!(day4.rates.get("USD"), Some(&5.1)); // ECB rate
+        assert_eq!(day4.rates.get("USD"), Some(&5.1)); // Primary rate
         assert_eq!(day4.rates.get("GBP"), Some(&4.85));
         assert_eq!(day4.rates.get("JPY"), Some(&134.0));
     }
 
     #[actix_web::test]
     async fn test_historical_rates_with_empty_multiple_providers() {
-        let ecb_rates = HashMap::new();
-        let mut floating_rates = HashMap::new();
-        floating_rates.insert("USD".to_string(), 1.2); // Should be overridden by ECB
-        floating_rates.insert("JPY".to_string(), 130.0); // Should be included
+        let primary_rates = HashMap::new();
+        let mut secondary_rates = HashMap::new();
+        secondary_rates.insert("USD".to_string(), 1.2); // Should be included
+        secondary_rates.insert("JPY".to_string(), 130.0); // Should be included
 
-        let ecb_provider = MockProvider {
-            name: "ECB".to_string(),
-            rates: ecb_rates,
+        let primary_provider = MockProvider {
+            name: "Primary".to_string(),
+            rates: primary_rates,
         };
-        let floating_provider = MockProvider {
-            name: "Floating".to_string(),
-            rates: floating_rates,
+        let secondary_provider = MockProvider {
+            name: "Secondary".to_string(),
+            rates: secondary_rates,
         };
         static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS.get_or_init(|| vec![Box::new(ecb_provider), Box::new(floating_provider)]);
+        MOCK_PROVIDERS
+            .get_or_init(|| vec![Box::new(primary_provider), Box::new(secondary_provider)]);
 
         let from = Date::from_calendar_date(2024, November, 12).unwrap();
         let to = from.add(Duration::days(2));
@@ -323,13 +324,13 @@ mod tests {
         let day1 = result.get(&from).unwrap();
         assert_eq!(day1.base, "EUR");
         assert_eq!(day1.rates.len(), 2);
-        assert_eq!(day1.rates.get("USD"), Some(&2.2)); // ECB rate
+        assert_eq!(day1.rates.get("USD"), Some(&2.2)); // Secondary rate
         assert!(!day1.rates.contains_key("GBP"));
         assert_eq!(day1.rates.get("JPY"), Some(&131.0));
         let day3 = result.get(&to).unwrap();
         assert_eq!(day3.base, "EUR");
         assert_eq!(day3.rates.len(), 2);
-        assert_eq!(day3.rates.get("USD"), Some(&4.2)); // ECB rate
+        assert_eq!(day3.rates.get("USD"), Some(&4.2)); // Secondary rate
         assert!(!day3.rates.contains_key("GBP"));
         assert_eq!(day3.rates.get("JPY"), Some(&133.0));
     }
