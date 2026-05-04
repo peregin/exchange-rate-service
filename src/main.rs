@@ -1,53 +1,54 @@
-use std::io::Write;
 use std::env;
+use std::io::Write;
 mod route;
 mod service;
 
-use actix_web::{http, App, HttpServer};
 use actix_cors::Cors;
+use actix_web::{http, App, HttpServer};
 use log::{debug, info};
 use regex::Regex;
 
-use std::sync::LazyLock;
 use actix_web::dev::ServiceResponse;
 use actix_web::http::header::HeaderValue;
 use actix_web::http::StatusCode;
 use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
+use std::sync::LazyLock;
 use time::OffsetDateTime;
 
 const NA: &str = "n/a";
 
-// TODO: use async all the way down -> then caching sort out differently
-// TODO: don't use unwrap
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::builder().format(|buf, record| {
-        writeln!(
-            buf,
-            "[{}] {}: {}",
-            OffsetDateTime::now_utc().format(&time::format_description::well_known::Rfc3339).unwrap_or(NA.to_string()),
-            record.level(),
-            record.args()
-        )
-    }).init();
+    env_logger::builder()
+        .format(|buf, record| {
+            writeln!(
+                buf,
+                "[{}] {}: {}",
+                OffsetDateTime::now_utc()
+                    .format(&time::format_description::well_known::Rfc3339)
+                    .unwrap_or(NA.to_string()),
+                record.level(),
+                record.args()
+            )
+        })
+        .init();
     let port = env::var("SERVICE_PORT").unwrap_or_else(|_| "9012".to_string());
     info!("starting exchange service on port {port} ...");
 
     HttpServer::new(|| {
-        let cors = Cors::permissive()
-            .allowed_origin_fn(move |origin_header, _request_head| {
-                let origin = origin_header.to_str().unwrap();
-                debug!("origin: {origin}");
-                is_allowed_origin(origin)
-            });
+        let cors = Cors::permissive().allowed_origin_fn(move |origin_header, _request_head| {
+            let origin = origin_header.to_str().unwrap();
+            debug!("origin: {origin}");
+            is_allowed_origin(origin)
+        });
         App::new()
             .wrap(cors)
             .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, render_500))
-            .configure(route::route::init_routes)
+            .configure(route::routes::init_routes)
     })
-        .bind(format!("0.0.0.0:{port}"))?
-        .run()
-        .await
+    .bind(format!("0.0.0.0:{port}"))?
+    .run()
+    .await
 }
 
 fn render_500<B, E>(mut res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>, E> {
@@ -67,10 +68,10 @@ fn render_500<B, E>(mut res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<
     Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
 }
 
-
 fn is_allowed_origin(origin: &str) -> bool {
     const ALLOWED_ORIGINS: &str = r".*(localhost|peregin\.com|velocorner\.com)";
-    static ORIGINS_REGEX: LazyLock<Regex, fn() -> Regex> = LazyLock::new(|| Regex::new(ALLOWED_ORIGINS).unwrap());
+    static ORIGINS_REGEX: LazyLock<Regex, fn() -> Regex> =
+        LazyLock::new(|| Regex::new(ALLOWED_ORIGINS).unwrap());
     ORIGINS_REGEX.is_match(origin)
 }
 

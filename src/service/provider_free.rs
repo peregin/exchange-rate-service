@@ -1,7 +1,6 @@
 use crate::route::model::ExchangeRate;
-use crate::service::provider::RateProvider;
+use crate::service::provider::{ProviderFuture, RateProvider};
 use futures::{stream, StreamExt};
-use futures_executor::block_on;
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -9,8 +8,7 @@ use std::sync::LazyLock;
 use time::format_description::well_known::Iso8601;
 use time::Date;
 
-pub struct FreeRateProvider {
-}
+pub struct FreeRateProvider {}
 
 static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
@@ -99,15 +97,20 @@ impl RateProvider for FreeRateProvider {
         "Free Exchange API"
     }
 
-    fn latest(&self, base: &str) -> ExchangeRate {
-        ExchangeRate::empty(base)
+    fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate> {
+        Box::pin(async move { ExchangeRate::empty(base) })
     }
 
-    fn symbols(&self) -> HashMap<String, String> {
-        HashMap::new()
+    fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>> {
+        Box::pin(async { HashMap::new() })
     }
 
-    fn historical(&self, base: &str, from: &Date, to: &Date) -> HashMap<Date, ExchangeRate> {
-        block_on(self.rates_between(base, from, to))
+    fn historical<'a>(
+        &'a self,
+        base: &'a str,
+        from: &'a Date,
+        to: &'a Date,
+    ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>> {
+        Box::pin(async move { self.rates_between(base, from, to).await })
     }
 }

@@ -1,14 +1,13 @@
 use crate::route::model::ExchangeRate;
-use crate::service::provider::RateProvider;
+use crate::service::provider::{ProviderFuture, RateProvider};
 use log::info;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::LazyLock;
 use time::Date;
 
-pub struct FloatRateProvider {
-}
+pub struct FloatRateProvider {}
 
 static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
@@ -27,7 +26,7 @@ impl FloatRateProvider {
         FloatRateProvider {}
     }
 
-    fn retrieve(&self, base: &str) -> Vec<FloatRateEntry> {
+    async fn retrieve(&self, base: &str) -> Vec<FloatRateEntry> {
         let reply = HTTP_CLIENT
             .get(format!(
                 "{}/daily/{}.json",
@@ -37,8 +36,12 @@ impl FloatRateProvider {
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")
             .send()
+            .await
             .unwrap();
-        let reply = reply.json::<HashMap<String, FloatRateEntry>>().unwrap();
+        let reply = reply
+            .json::<HashMap<String, FloatRateEntry>>()
+            .await
+            .unwrap();
         info!("base={:#?}, {:#?} rates", base, reply.len());
         reply.values().cloned().collect()
     }
@@ -51,23 +54,33 @@ impl RateProvider for FloatRateProvider {
 
     // latest exchange rate
 
-    fn latest(&self, base: &str) -> ExchangeRate {
-        let reply = self.retrieve(base);
-        ExchangeRate {
-            base: base.to_owned(),
-            rates: reply.into_iter().map(|e| (e.code, e.rate)).collect(),
-        }
+    fn latest<'a>(&'a self, base: &'a str) -> ProviderFuture<'a, ExchangeRate> {
+        Box::pin(async move {
+            let reply = self.retrieve(base).await;
+            ExchangeRate {
+                base: base.to_owned(),
+                rates: reply.into_iter().map(|e| (e.code, e.rate)).collect(),
+            }
+        })
     }
 
-    fn symbols(&self) -> HashMap<String, String> {
-        self.retrieve(&String::from("CHF"))
-            .into_iter()
-            .map(|e| (e.code, e.name))
-            .collect()
+    fn symbols(&self) -> ProviderFuture<'_, HashMap<String, String>> {
+        Box::pin(async move {
+            self.retrieve("CHF")
+                .await
+                .into_iter()
+                .map(|e| (e.code, e.name))
+                .collect()
+        })
     }
 
-    fn historical(&self, _base: &str, _from: &Date, _to: &Date) -> HashMap<Date, ExchangeRate> {
-        HashMap::new()
+    fn historical<'a>(
+        &'a self,
+        _base: &'a str,
+        _from: &'a Date,
+        _to: &'a Date,
+    ) -> ProviderFuture<'a, HashMap<Date, ExchangeRate>> {
+        Box::pin(async { HashMap::new() })
     }
 }
 
@@ -76,26 +89,26 @@ mod tests {
     use super::*;
     use time::Month::November;
 
-    #[test]
-    fn test_historical_empty_response() {
+    #[actix_web::test]
+    async fn test_historical_empty_response() {
         let provider = FloatRateProvider::new(); // Replace with your actual provider struct
         let base = "USD";
         let from = Date::from_calendar_date(2023, time::Month::January, 1).unwrap();
         let to = Date::from_calendar_date(2024, November, 11).unwrap();
 
-        let result = provider.historical(base, &from, &to);
+        let result = provider.historical(base, &from, &to).await;
 
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn test_historical_date_range() {
+    #[actix_web::test]
+    async fn test_historical_date_range() {
         let provider = FloatRateProvider::new();
         let base = "EUR";
         let from = Date::from_calendar_date(2024, November, 11).unwrap();
         let to = from + time::Duration::days(10);
 
-        let result = provider.historical(base, &from, &to);
+        let result = provider.historical(base, &from, &to).await;
 
         assert!(result.is_empty());
     }

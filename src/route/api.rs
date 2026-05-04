@@ -1,6 +1,5 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::{historical_rates_of, rates_of, symbols};
-use actix_web::rt::task::spawn_blocking;
 use actix_web::{get, web, HttpResponse, Responder};
 use time::{Date, Duration, OffsetDateTime};
 use utoipa::OpenApi;
@@ -17,16 +16,12 @@ use utoipa_swagger_ui::SwaggerUi;
 )]
 #[get("/api/rates/currencies")]
 async fn currencies() -> impl Responder {
-    spawn_blocking(move || {
-        let pairs = symbols();
-        let sorted = pairs
-            .iter()
-            .map(|(k, v)| (k.to_uppercase(), v.clone()))
-            .collect::<std::collections::BTreeMap<_, _>>();
-        web::Json(sorted)
-    })
-    .await
-    .unwrap()
+    let pairs = symbols().await;
+    let sorted = pairs
+        .iter()
+        .map(|(k, v)| (k.to_uppercase(), v.clone()))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    web::Json(sorted)
 }
 
 #[utoipa::path(
@@ -47,15 +42,12 @@ async fn currencies() -> impl Responder {
 async fn historical_rates(params: web::Path<String>) -> HttpResponse {
     let base = params.into_inner().to_uppercase();
     let (now, last_month) = history_range(30);
-    let series = spawn_blocking(move || {
-        // map keys can be String only!!! convert Date to String
-        historical_rates_of(base, last_month, now)
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.clone()))
-            .collect::<std::collections::BTreeMap<_, _>>()
-    })
-    .await
-    .unwrap();
+    // map keys can be String only!!! convert Date to String
+    let series = historical_rates_of(base, last_month, now)
+        .await
+        .iter()
+        .map(|(k, v)| (k.to_string(), v.clone()))
+        .collect::<std::collections::BTreeMap<_, _>>();
     HttpResponse::Ok().json(series)
 }
 
@@ -81,16 +73,13 @@ async fn historical_rate(params: web::Path<(String, String)>) -> HttpResponse {
     let base = base.to_uppercase();
     let counter = counter.to_uppercase();
     let (now, last_month) = history_range(30);
-    let series = spawn_blocking(move || {
-        // map keys can be String only!!! convert Date to String
-        historical_rates_of(base, last_month, now)
-            .iter()
-            .flat_map(|(k, ex)| ex.rates.get(&counter).map(|r| (k, r)))
-            .map(|(k, v)| (k.to_string(), v.clone()))
-            .collect::<std::collections::BTreeMap<_, _>>()
-    })
-    .await
-    .unwrap();
+    // map keys can be String only!!! convert Date to String
+    let series = historical_rates_of(base, last_month, now)
+        .await
+        .iter()
+        .flat_map(|(k, ex)| ex.rates.get(&counter).map(|r| (k, r)))
+        .map(|(k, v)| (k.to_string(), *v))
+        .collect::<std::collections::BTreeMap<_, _>>();
     HttpResponse::Ok().json(series)
 }
 
@@ -118,12 +107,8 @@ fn history_range(days: i64) -> (Date, Date) {
 #[get("/api/rates/{base}")]
 async fn rates(info: web::Path<String>) -> impl Responder {
     let base: String = info.into_inner().to_uppercase();
-    spawn_blocking(move || {
-        let exchanges = rates_of(base);
-        web::Json(exchanges)
-    })
-    .await
-    .unwrap()
+    let exchanges = rates_of(base).await;
+    web::Json(exchanges)
 }
 
 #[utoipa::path(
@@ -151,7 +136,7 @@ async fn rate(params: web::Path<(String, String)>) -> HttpResponse {
     let (base, counter) = params.into_inner();
     let base = base.to_uppercase();
     let counter = counter.to_uppercase();
-    let exchanges = spawn_blocking(move || rates_of(base)).await.unwrap();
+    let exchanges = rates_of(base).await;
     match exchanges.rates.get(&counter) {
         Some(fx) => HttpResponse::Ok().json(fx),
         None => HttpResponse::NotFound().finish(),
