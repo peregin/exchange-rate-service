@@ -172,5 +172,5 @@ pub fn init_routes(config: &mut web::ServiceConfig) {
     config.service(historical_rate);
     config.service(rates);
     config.service(rate);
-    config.service(SwaggerUi::new("/docs/{_:.*}").url("/opanapi.json", ApiDoc::openapi()));
+    config.service(SwaggerUi::new("/docs/{_:.*}").url("/openapi.json", ApiDoc::openapi()));
 }
