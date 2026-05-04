@@ -42,7 +42,7 @@ Check historical rates source for UGX, NPR
 
 | Site                            | KES, BDT | LAK, KIP | Free | Historical   | Quota      | Source      |
 |---------------------------------|----------|----------|------|--------------|------------|-------------|
-| ☑️ https://frankfurter.dev/     | ✅        | ✅        | ✅    | ✅ timeseries | no         | ECB         |
+| ☑️ https://frankfurter.dev/     | ✅        | ✅ no KIP | ✅    | ✅ timeseries | no         | multiple    |
 | ☑️ https://www.frankfurter.app/ | ⛔️       | ⛔️       | ✅    | ✅ timeseries | no         | ECB         |
 | https://exchangerate.host       | ✅        | ⛔️       | ✅    | ✅            | 100/mo     | multiple    | 
 | https://exchangerate-api.com    | ✅        | ⛔️       | ✅    | ⛔️ paid      | 1500/mo    | 30+         | 
@@ -192,5 +192,4 @@ https://corrode.dev/blog/tips-for-faster-rust-compile-times/
 - https://github.com/mre/idiomatic-rust
 - https://github.com/rust-unofficial/awesome-rust
 - https://github.com/ctjhoa/rust-learning
-
 

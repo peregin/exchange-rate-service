@@ -10,6 +10,7 @@ use time::Date;
 use crate::route::model::ExchangeRate;
 use crate::service::provider_ecb::EcbRateProvider;
 use crate::service::provider_float::FloatRateProvider;
+use crate::service::provider_frankfurter_v2::FrankfurterV2RateProvider;
 use crate::service::provider_free::FreeRateProvider;
 
 // generic contract what needs to be implemented by any rate provider
@@ -35,12 +36,13 @@ type Providers = Vec<Box<dyn RateProvider>>;
 
 fn get_providers() -> &'static Providers {
     static PROVIDERS: LazyLock<Providers, fn() -> Providers> = LazyLock::new(|| {
-        // sequence is important, the latter will override the same currencies
-        // ECB rates override float rates
+        // sequence is important, earlier providers keep priority for the same currencies
+        // ECB rates override float rates, while later providers fill gaps
         let providers: Providers = vec![
             Box::new(EcbRateProvider::new()),
             Box::new(FloatRateProvider::new()),
             Box::new(FreeRateProvider::new()),
+            Box::new(FrankfurterV2RateProvider::new()),
         ];
         info!(
             "providers: {:?}",
