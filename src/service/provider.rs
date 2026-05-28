@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cached::proc_macro::cached;
+use cached::macros::cached;
 use futures::future::join_all;
 use log::info;
 use std::collections::HashMap;
@@ -51,7 +51,7 @@ pub fn count_providers() -> usize {
     get_providers().len()
 }
 
-#[cached(time = 3600, sync_writes = "default")]
+#[cached(ttl = 3600, sync_writes = "default")]
 pub async fn rates_of(base: String) -> ExchangeRate {
     rates_of_with(&base, get_providers).await
 }
@@ -68,7 +68,7 @@ where
 }
 
 // map of ISO3 code -> description
-#[cached(time = 3600, sync_writes = "default")]
+#[cached(ttl = 3600, sync_writes = "default")]
 pub async fn symbols() -> HashMap<String, String> {
     join_all(get_providers().iter().map(|p| p.symbols()))
         .await
@@ -77,7 +77,7 @@ pub async fn symbols() -> HashMap<String, String> {
         .collect()
 }
 
-#[cached(time = 3600, sync_writes = "default")]
+#[cached(ttl = 3600, sync_writes = "default")]
 pub async fn historical_rates_of(
     base: String,
     from: Date,
