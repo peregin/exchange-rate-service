@@ -18,3 +18,36 @@ where
         )),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::f32_from_number_or_string;
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct Rate {
+        #[serde(deserialize_with = "f32_from_number_or_string")]
+        value: f32,
+    }
+
+    #[test]
+    fn test_f32_from_number_or_string_accepts_number() {
+        let rate: Rate = serde_json::from_str(r#"{"value":1.78073471}"#).unwrap();
+
+        assert_eq!(rate.value, 1.7807347);
+    }
+
+    #[test]
+    fn test_f32_from_number_or_string_accepts_string() {
+        let rate: Rate = serde_json::from_str(r#"{"value":"1.78073471"}"#).unwrap();
+
+        assert_eq!(rate.value, 1.7807347);
+    }
+
+    #[test]
+    fn test_f32_from_number_or_string_rejects_non_numeric_string() {
+        let result = serde_json::from_str::<Rate>(r#"{"value":"not-a-rate"}"#);
+
+        assert!(result.is_err());
+    }
+}

@@ -223,14 +223,4 @@ mod tests {
             Some(&157.76)
         );
     }
-
-    #[test]
-    fn test_frankfurter_v2_rate_entry_accepts_string_rate() {
-        let entry: FrankfurterV2RateEntry = serde_json::from_str(
-            r#"{"date":"2024-01-01","base":"CHF","quote":"KES","rate":"1.78073471"}"#,
-        )
-        .unwrap();
-
-        assert_eq!(entry.rate, 1.7807347);
-    }
 }
