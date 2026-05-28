@@ -1,7 +1,8 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::RateProvider;
+use crate::service::serde_helpers::f32_from_number_or_string;
 use async_trait::async_trait;
-use log::info;
+use log::{error, info};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -17,6 +18,7 @@ static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 struct FloatRateEntry {
     pub code: String,
     pub name: String,
+    #[serde(deserialize_with = "f32_from_number_or_string")]
     pub rate: f32,
 }
 
@@ -28,23 +30,39 @@ impl FloatRateProvider {
     }
 
     async fn retrieve(&self, base: &str) -> Vec<FloatRateEntry> {
-        let reply = HTTP_CLIENT
-            .get(format!(
-                "{}/daily/{}.json",
-                FloatRateProvider::HOST,
-                base.to_lowercase()
-            ))
+        let url = format!(
+            "{}/daily/{}.json",
+            FloatRateProvider::HOST,
+            base.to_lowercase()
+        );
+        match HTTP_CLIENT
+            .get(&url)
             .header("User-Agent", "actix-web")
             .header("Content-Type", "application/json")
             .send()
             .await
-            .unwrap();
-        let reply = reply
-            .json::<HashMap<String, FloatRateEntry>>()
-            .await
-            .unwrap();
-        info!("base={:#?}, {:#?} rates", base, reply.len());
-        reply.values().cloned().collect()
+        {
+            Ok(reply) => match reply.error_for_status() {
+                Ok(reply) => match reply.json::<HashMap<String, FloatRateEntry>>().await {
+                    Ok(reply) => {
+                        info!("base={:#?}, {:#?} rates", base, reply.len());
+                        reply.values().cloned().collect()
+                    }
+                    Err(e) => {
+                        error!("Failed to parse FloatRates response from {}: {}", url, e);
+                        Vec::new()
+                    }
+                },
+                Err(e) => {
+                    error!("FloatRates request failed for {}: {}", url, e);
+                    Vec::new()
+                }
+            },
+            Err(e) => {
+                error!("FloatRates request failed for {}: {}", url, e);
+                Vec::new()
+            }
+        }
     }
 }
 
@@ -109,5 +127,14 @@ mod tests {
         let result = provider.historical(base, &from, &to).await;
 
         assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_float_rate_entry_accepts_string_rate() {
+        let entry: FloatRateEntry =
+            serde_json::from_str(r#"{"code":"KES","name":"Kenyan Shilling","rate":"1.78073471"}"#)
+                .unwrap();
+
+        assert_eq!(entry.rate, 1.7807347);
     }
 }

@@ -1,5 +1,6 @@
 use crate::route::model::ExchangeRate;
 use crate::service::provider::RateProvider;
+use crate::service::serde_helpers::f32_from_number_or_string;
 use async_trait::async_trait;
 use log::{error, info};
 use reqwest::Client;
@@ -19,6 +20,7 @@ struct FrankfurterV2RateEntry {
     date: String,
     base: String,
     quote: String,
+    #[serde(deserialize_with = "f32_from_number_or_string")]
     rate: f32,
 }
 
@@ -220,5 +222,15 @@ mod tests {
                 .get("NPR"),
             Some(&157.76)
         );
+    }
+
+    #[test]
+    fn test_frankfurter_v2_rate_entry_accepts_string_rate() {
+        let entry: FrankfurterV2RateEntry = serde_json::from_str(
+            r#"{"date":"2024-01-01","base":"CHF","quote":"KES","rate":"1.78073471"}"#,
+        )
+        .unwrap();
+
+        assert_eq!(entry.rate, 1.7807347);
     }
 }
