@@ -1,3 +1,4 @@
+mod http;
 pub mod provider;
 mod provider_float;
 mod provider_frankfurter_v2;

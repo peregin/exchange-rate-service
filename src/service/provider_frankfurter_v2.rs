@@ -1,19 +1,16 @@
 use crate::route::model::ExchangeRate;
+use crate::service::http;
 use crate::service::provider::RateProvider;
 use crate::service::serde_helpers::f32_from_number_or_string;
 use async_trait::async_trait;
 use log::{error, info};
-use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::LazyLock;
 use time::format_description::well_known::Iso8601;
 use time::Date;
 
 pub struct FrankfurterV2RateProvider {}
-
-static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct FrankfurterV2RateEntry {
@@ -42,26 +39,8 @@ impl FrankfurterV2RateProvider {
         T: DeserializeOwned + Default,
     {
         let url = format!("{}/{}", FrankfurterV2RateProvider::HOST, path);
-        match HTTP_CLIENT
-            .get(&url)
-            .header("User-Agent", "actix-web")
-            .header("Content-Type", "application/json")
-            .send()
-            .await
-        {
-            Ok(reply) => match reply.error_for_status() {
-                Ok(reply) => reply.json::<T>().await.unwrap_or_else(|e| {
-                    error!(
-                        "Failed to parse Frankfurter v2 response from {}: {}",
-                        url, e
-                    );
-                    T::default()
-                }),
-                Err(e) => {
-                    error!("Frankfurter v2 request failed for {}: {}", url, e);
-                    T::default()
-                }
-            },
+        match http::get_json(&url).await {
+            Ok(reply) => reply,
             Err(e) => {
                 error!("Frankfurter v2 request failed for {}: {}", url, e);
                 T::default()

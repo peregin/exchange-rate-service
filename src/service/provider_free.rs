@@ -1,17 +1,14 @@
 use crate::route::model::ExchangeRate;
+use crate::service::http;
 use crate::service::provider::RateProvider;
 use async_trait::async_trait;
 use futures::{stream, StreamExt};
-use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::LazyLock;
 use time::format_description::well_known::Iso8601;
 use time::Date;
 
 pub struct FreeRateProvider {}
-
-static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 // internal response
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -30,31 +27,18 @@ impl FreeRateProvider {
         FreeRateProvider {}
     }
 
-    async fn retrieve(&self, path: &str) -> Response {
-        HTTP_CLIENT
-            .get(format!("{}@{}", FreeRateProvider::HOST, path))
-            .header("User-Agent", "actix-web")
-            .header("Content-Type", "application/json")
-            .send()
-            .await
-            .unwrap()
-    }
-
     async fn rates_from(&self, base: &str, at: &Date) -> ExchangeRate {
         let format = Iso8601::DATE;
         let iso_at = at.format(&format).unwrap();
         let key = base.to_lowercase();
-        let reply = self
-            .retrieve(&format!("{}/v1/currencies/{}.json", iso_at, key))
-            .await;
-        // get JSON hashmap, where the name is variable
-        let base_rate: FreeRateEntry = reply.json::<FreeRateEntry>().await.unwrap_or_else(|e| {
-            log::error!("Failed to parse FreeRateEntry: {}", e);
-            FreeRateEntry {
-                date: String::new(),
-                currencies: HashMap::new(),
+        let url = format!("{}@{}/v1/currencies/{}.json", Self::HOST, iso_at, key);
+        let base_rate = match http::get_json::<FreeRateEntry>(&url).await {
+            Ok(reply) => reply,
+            Err(e) => {
+                log::error!("Free Exchange API request failed for {}: {}", url, e);
+                return ExchangeRate::empty(base);
             }
-        });
+        };
         let empty_rates = HashMap::new();
         let rates: &HashMap<String, f32> = base_rate.currencies.get(&key).unwrap_or(&empty_rates);
         ExchangeRate {
