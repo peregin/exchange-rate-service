@@ -53,14 +53,11 @@ pub fn count_providers() -> usize {
 
 #[cached(ttl = 3600, sync_writes = "default")]
 pub async fn rates_of(base: String) -> ExchangeRate {
-    rates_of_with(&base, get_providers).await
+    rates_of_with(&base, get_providers()).await
 }
 
-async fn rates_of_with<F>(base: &str, providers_fn: F) -> ExchangeRate
-where
-    F: Fn() -> &'static Providers,
-{
-    let rates = join_all(providers_fn().iter().map(|p| p.latest(base))).await;
+async fn rates_of_with(base: &str, providers: &[Box<dyn RateProvider>]) -> ExchangeRate {
+    let rates = join_all(providers.iter().map(|p| p.latest(base))).await;
     // merge with priority (earlier providers keep priority for the same currencies)
     rates
         .into_iter()
@@ -84,26 +81,19 @@ pub async fn historical_rates_of(
     to: Date,
 ) -> HashMap<Date, ExchangeRate> {
     info!("historical_rates_of: {} {} {}", base, from, to);
-    historical_rates_of_with(&base, from, to, get_providers).await
+    historical_rates_of_with(&base, from, to, get_providers()).await
 }
 
-async fn historical_rates_of_with<F>(
+async fn historical_rates_of_with(
     base: &str,
     from: Date,
     to: Date,
-    providers_fn: F,
-) -> HashMap<Date, ExchangeRate>
-where
-    F: Fn() -> &'static Providers,
-{
-    let rates = join_all(
-        providers_fn()
-            .iter()
-            .map(|p| p.historical(base, &from, &to)),
-    )
-    .await
-    .into_iter()
-    .flat_map(|rates| rates.into_iter());
+    providers: &[Box<dyn RateProvider>],
+) -> HashMap<Date, ExchangeRate> {
+    let rates = join_all(providers.iter().map(|p| p.historical(base, &from, &to)))
+        .await
+        .into_iter()
+        .flat_map(|rates| rates.into_iter());
     // merge with priority (earlier providers keep priority for the same currencies)
     rates.fold(HashMap::new(), |mut acc, (date, current)| {
         if let Some(existing) = acc.get_mut(&date) {
@@ -120,7 +110,6 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
     use std::ops::Add;
-    use std::sync::OnceLock;
     use time::Duration;
     use time::Month::November;
 
@@ -186,10 +175,9 @@ mod tests {
             name: "Test Provider".to_string(),
             rates,
         };
-        static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
-        MOCK_PROVIDERS.get_or_init(|| vec![Box::new(mock_provider)]);
+        let providers: Providers = vec![Box::new(mock_provider)];
 
-        let result = rates_of_with("EUR", || MOCK_PROVIDERS.get().unwrap()).await;
+        let result = rates_of_with("EUR", &providers).await;
 
         assert_eq!(result.base, "EUR");
         assert_eq!(result.rates.len(), 2);
@@ -216,12 +204,10 @@ mod tests {
             name: "Secondary".to_string(),
             rates: secondary_rates,
         };
-        static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS
-            .get_or_init(|| vec![Box::new(primary_provider), Box::new(secondary_provider)]);
+        let providers: Providers = vec![Box::new(primary_provider), Box::new(secondary_provider)];
 
-        let result = rates_of_with("EUR", || MOCK_PROVIDERS.get().unwrap()).await;
+        let result = rates_of_with("EUR", &providers).await;
 
         assert_eq!(result.base, "EUR");
         assert_eq!(result.rates.len(), 3);
@@ -232,9 +218,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_rates_of_empty_providers() {
-        static TEST_PROVIDERS: Providers = vec![];
-
-        let result = rates_of_with("EUR", || &TEST_PROVIDERS).await;
+        let result = rates_of_with("EUR", &[]).await;
 
         assert_eq!(result.base, "EUR");
         assert!(result.rates.is_empty());
@@ -258,15 +242,12 @@ mod tests {
             name: "Secondary".to_string(),
             rates: secondary_rates,
         };
-        static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS
-            .get_or_init(|| vec![Box::new(primary_provider), Box::new(secondary_provider)]);
+        let providers: Providers = vec![Box::new(primary_provider), Box::new(secondary_provider)];
 
         let from = Date::from_calendar_date(2024, November, 12).unwrap();
         let to = from.add(Duration::days(3));
-        let result =
-            historical_rates_of_with("EUR", from, to, || MOCK_PROVIDERS.get().unwrap()).await;
+        let result = historical_rates_of_with("EUR", from, to, &providers).await;
 
         //println!("{:#?}", result);
         assert_eq!(result.len(), 4);
@@ -299,15 +280,12 @@ mod tests {
             name: "Secondary".to_string(),
             rates: secondary_rates,
         };
-        static MOCK_PROVIDERS: OnceLock<Providers> = OnceLock::new();
         // use the same order as in the real providers
-        MOCK_PROVIDERS
-            .get_or_init(|| vec![Box::new(primary_provider), Box::new(secondary_provider)]);
+        let providers: Providers = vec![Box::new(primary_provider), Box::new(secondary_provider)];
 
         let from = Date::from_calendar_date(2024, November, 12).unwrap();
         let to = from.add(Duration::days(2));
-        let result =
-            historical_rates_of_with("EUR", from, to, || MOCK_PROVIDERS.get().unwrap()).await;
+        let result = historical_rates_of_with("EUR", from, to, &providers).await;
 
         println!("{:#?}", result);
         assert_eq!(result.len(), 3);
