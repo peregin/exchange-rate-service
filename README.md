@@ -5,11 +5,103 @@ Connects to various data sources on demand and retrieves the latest conversion r
 It uses a one-hour cache.
 
 Supports the following `json` endpoints:
-- /rates/currencies - to retrieve supported currencies
-- /rates/:base - to retrieve all FX rates for a given base currency
-- /rates/:base/:counter - to retrieve a specific rate for a given currency pair
+- /api/rates/currencies - to retrieve supported currencies
+- /api/rates/:base - to retrieve all FX rates for a given base currency
+- /api/rates/:base/:counter - to retrieve a specific rate for a given currency pair
 
 The root path `/` retrieves a welcome page in `text/html`.
+
+## MCP server
+
+The service also exposes a read-only [Model Context Protocol](https://modelcontextprotocol.io/) server over Streamable HTTP. Start the service with `cargo run`, then connect an MCP client to:
+
+```text
+http://127.0.0.1:9012/mcp
+```
+
+MCP and REST are served by the same Actix server on `SERVICE_PORT` (default `9012`), bound to `0.0.0.0`. They share the rate cache. Native MCP clients can connect without credentials. Requests with an `Origin` header are rejected; browser-based clients therefore need a trusted server-side proxy.
+
+The landing page's `/mcp` link opens a connection guide in a browser. MCP clients use the same URL for protocol requests.
+
+Available tools:
+
+- `list_currencies` returns currency codes and names.
+- `get_exchange_rates` accepts `base` and an optional `counter` (for example, `{"base":"CHF","counter":"EUR"}`). Omitting `counter` returns all available rates for the base.
+- `get_historical_rates` accepts `base`, optional `counter`, and inclusive `from` and `to` dates in `YYYY-MM-DD` format. The interval is limited to 31 days and cannot end in the future.
+
+Currency codes must be three ASCII letters; lowercase input is accepted. The rates are indicative. Some providers can return partial data or empty results during an outage, which are cached for up to one hour.
+
+### Connect clients
+
+The examples below use the local URL. For clients on another machine, replace it with your deployed HTTPS MCP URL; `127.0.0.1` always refers to the client machine. The server must be running before a client connects.
+
+**Codex CLI or IDE** ([OpenAI documentation](https://developers.openai.com/learn/docs-mcp)):
+
+```sh
+codex mcp add exchange-rates --url http://127.0.0.1:9012/mcp
+codex mcp list
+```
+
+Alternatively add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.exchange-rates]
+url = "http://127.0.0.1:9012/mcp"
+```
+
+**Gemini CLI** ([documentation](https://geminicli.com/docs/tools/mcp-server/)):
+
+```sh
+gemini mcp add --transport http exchange-rates http://127.0.0.1:9012/mcp
+gemini mcp list
+```
+
+Or add the following entry to `~/.gemini/settings.json` or `.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "exchange-rates": { "httpUrl": "http://127.0.0.1:9012/mcp" }
+  }
+}
+```
+
+**Claude Code** ([documentation](https://code.claude.com/docs/en/mcp)):
+
+```sh
+claude mcp add --transport http exchange-rates http://127.0.0.1:9012/mcp
+claude mcp list
+```
+
+For Claude Desktop or claude.ai, use the application's custom connector settings and enter a publicly reachable HTTPS MCP URL. Cloud-hosted clients cannot reach a server running on your computer's loopback address.
+
+**Other MCP clients:** choose the Streamable HTTP transport and configure `http://127.0.0.1:9012/mcp` as the server URL. The client can discover the tools using `tools/list`. For a quick manual connection check, send an MCP initialization request:
+
+```sh
+curl -sS http://127.0.0.1:9012/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl","version":"1.0"}}}'
+```
+
+### Docker and remote deployment
+
+Publish the service port to access both REST and MCP. This example publishes it only on the host's loopback interface:
+
+```sh
+docker run --rm -p 127.0.0.1:9012:9012 peregin/velocorner.rates
+```
+
+For remote clients, route an HTTPS `/mcp` endpoint to the service port in your reverse proxy and allow Streamable HTTP requests and responses. Configure the proxy and network exposure for your environment; the application does not implement MCP authentication. For example, an Nginx proxy running on the same host as the process can use:
+
+```nginx
+location = /mcp {
+    proxy_pass http://127.0.0.1:9012/mcp;
+    proxy_http_version 1.1;
+    proxy_buffering off;
+    proxy_read_timeout 120s;
+}
+```
 
 ## Requirements
 - open source and free usage (non-commercial)

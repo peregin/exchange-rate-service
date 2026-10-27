@@ -1,5 +1,6 @@
 use std::env;
 use std::io::Write;
+mod mcp;
 mod route;
 mod service;
 

@@ -64,6 +64,7 @@ pub async fn welcome(_: HttpRequest) -> impl Responder {
             Used/total memory: <i>{} / {}</i><br/>
             Providers: <i>{}</i><br/>
             Open API <a href="/docs/">/docs</a><br/>
+            MCP <a href="/mcp">/mcp</a> (Streamable HTTP)<br/>
         </body>
     "#,
         now,

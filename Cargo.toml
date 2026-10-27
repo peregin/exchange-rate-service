@@ -27,3 +27,11 @@ sysinfo = { version = "0.39.6", features = ["system"], default-features = false 
 humansize = "2.1.3"
 regex = "1.13.1"
 futures = { version = "0.3.34", default-features = false }
+
+# MCP over Streamable HTTP
+rmcp = { version = "3.8.0", features = ["transport-streamable-http-server"] }
+http = "1"
+http-body-util = "0.1"
+
+[dev-dependencies]
+rmcp = { version = "3.8.0", features = ["client", "transport-streamable-http-client-reqwest", "reqwest"] }
